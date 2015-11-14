@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections.Generic;
-using Map.Generator.SubdividedPlane;
+using Map.Generator.MapModels;
 using System.IO;
 
-namespace Map.Generator
+namespace Map.Generator.Algorithms
 {
     public class DiamondSquare
     {
@@ -12,6 +12,7 @@ namespace Map.Generator
         /// 0..1
         /// </summary>
         public float strength = 0.1f;
+        public float minHeight = 0;
         public float maxHeight = 1;
 
         System.Random rand = new System.Random();
@@ -26,7 +27,7 @@ namespace Map.Generator
             return pow2[degree];
         }
 
-        void Square(Node<MapVertex> cur, float appl)
+        void Square(Area cur, float appl)
         {
             float maxOffset = appl * strength;
 
@@ -37,13 +38,13 @@ namespace Map.Generator
             float _displacement = ((float)rand.NextDouble() * (2 * maxOffset) - maxOffset);
             if (cur.MiddlePt_Val.height + _displacement > maxHeight)
                 _displacement *= -1;
-            if (cur.MiddlePt_Val.height + _displacement < 0)
+            if (cur.MiddlePt_Val.height + _displacement < minHeight)
                 _displacement *= -1;
 
             cur.MiddlePt_Val.height += _displacement;
         }
 
-        void Diamond(Node<MapVertex> cur)
+        void Diamond(Area cur)
         {
             // Try find relative points (points which will be used to avverage middleEdge points)
             // If some points doesn't exists we will use only 2 points (points on the corners of this edge)
@@ -51,39 +52,42 @@ namespace Map.Generator
             MapVertex _rightRelativePtVal = null;
             MapVertex _downRelativePtVal = null;
             MapVertex _leftRelativePtVal = null;
-            
+
+            if (!cur.IsSubDivided)
+                cur.Subdivide();
+
             if (cur.Parent != null)
             {
-                if (cur.Parent.LeftTopChild == cur)
+                if (cur.IsLeftTopChild)
                 {
                     // There is no left and top relative points
-                    if (cur.Parent.RightTopChild.IsDivided)
+                    if (cur.Parent.RightTopChild.IsSubDivided)
                         _rightRelativePtVal = cur.Parent.RightTopChild.MiddlePt_Val;
-                    if (cur.Parent.LeftDownChild.IsDivided)
+                    if (cur.Parent.LeftDownChild.IsSubDivided)
                         _downRelativePtVal = cur.Parent.LeftDownChild.MiddlePt_Val;
                 }
-                if (cur.Parent.RightTopChild == cur)
+                if (cur.IsRightTopChild)
                 {
                     // There is no top and right relative points
-                    if (cur.Parent.LeftTopChild.IsDivided)
+                    if (cur.Parent.LeftTopChild.IsSubDivided)
                         _leftRelativePtVal = cur.Parent.LeftTopChild.MiddlePt_Val;
-                    if (cur.Parent.RightDownChild.IsDivided)
+                    if (cur.Parent.RightDownChild.IsSubDivided)
                         _downRelativePtVal = cur.Parent.RightDownChild.MiddlePt_Val;
                 }
-                if (cur.Parent.LeftDownChild == cur)
+                if (cur.IsLeftDownChild)
                 {
                     // There is no left and down relative points
-                    if (cur.Parent.LeftTopChild.IsDivided)
+                    if (cur.Parent.LeftTopChild.IsSubDivided)
                         _topRelativePtVal = cur.Parent.LeftTopChild.MiddlePt_Val;
-                    if (cur.Parent.RightDownChild.IsDivided)
+                    if (cur.Parent.RightDownChild.IsSubDivided)
                         _rightRelativePtVal = cur.Parent.RightDownChild.MiddlePt_Val;
                 }
-                if (cur.Parent.RightDownChild == cur)
+                if (cur.IsRightDownChild)
                 {
                     // There is no down and right relative points
-                    if (cur.Parent.RightTopChild.IsDivided)
+                    if (cur.Parent.RightTopChild.IsSubDivided)
                         _topRelativePtVal = cur.Parent.RightTopChild.MiddlePt_Val;
-                    if (cur.Parent.LeftDownChild.IsDivided)
+                    if (cur.Parent.LeftDownChild.IsSubDivided)
                         _leftRelativePtVal = cur.Parent.LeftDownChild.MiddlePt_Val;
                 }
             }
@@ -121,58 +125,48 @@ namespace Map.Generator
                     (cur.LeftTopPoint_Val.height + cur.LeftDownPoint_Val.height) / 2.0f;
         }
 
-        void Pogr(Queue<Node<MapVertex>> curLayer, Queue<Node<MapVertex>> deeperLayer, int curDepth, int maxDepth)
+        void Pogr(Queue<Area> curLayer, Queue<Area> nextLayer, int curDepth, int maxDepth)
         {
             if (curLayer.Count == 0)
                 return;
-            // After we square all points we should Diamond them
-            Queue<Node<MapVertex>> toDiamond = new Queue<Node<MapVertex>>();
-            while (curLayer.Count != 0)
+
+            // Square current layer and collect areas to nextLayer
+            foreach (Area z in curLayer)
             {
-                Node<MapVertex> z = curLayer.Dequeue();
-                toDiamond.Enqueue(z);
-                Square(z, maxHeight / (float)GetPow2(curDepth + 1));
+                if (!z.IsSubDivided)
+                {
+                    z.Subdivide();
+                    Square(z, (maxHeight - minHeight) / (float)GetPow2(curDepth + 1));
+                }
 
                 if (curDepth == maxDepth)
                     continue;
-                deeperLayer.Enqueue(z.LeftTopChild);
-                deeperLayer.Enqueue(z.RightTopChild);
-                deeperLayer.Enqueue(z.LeftDownChild);
-                deeperLayer.Enqueue(z.RightDownChild);
+                nextLayer.Enqueue(z.LeftTopChild);
+                nextLayer.Enqueue(z.RightTopChild);
+                nextLayer.Enqueue(z.LeftDownChild);
+                nextLayer.Enqueue(z.RightDownChild);
             }
-            while (toDiamond.Count != 0)
+            // Diamond current layer
+            foreach (Area z in curLayer)
             {
-                Node<MapVertex> z = toDiamond.Dequeue();
                 Diamond(z);
             }
-            curLayer = deeperLayer;
-            deeperLayer = new Queue<Node<MapVertex>>();
 
-            Pogr(curLayer, deeperLayer, curDepth + 1, maxDepth);
+            curLayer = nextLayer;
+            nextLayer = new Queue<Area>();
+            Pogr(curLayer, nextLayer, curDepth + 1, maxDepth);
         }
 
-        public void ExtendResolution(HeightMap map, int newResolution)
+        public void ExtendResolution(Area map, int newResolution)
         {
-            if (map.resolution == 1)
-            {
-                map.val.Root.LeftTopPoint_Val = new MapVertex()
-                    { height = (float)rand.NextDouble() * maxHeight };
-                map.val.Root.RightTopPoint_Val = new MapVertex()
-                    { height = (float)rand.NextDouble() * maxHeight };
-                map.val.Root.LeftDownPoint_Val = new MapVertex()
-                    { height = (float)rand.NextDouble() * maxHeight };
-                map.val.Root.RightDownPoint_Val = new MapVertex()
-                    { height = (float)rand.NextDouble() * maxHeight };
-            }
-            Queue<Node<MapVertex>> curLayer = new Queue<Node<MapVertex>>();
-            Queue<Node<MapVertex>> deeperLayer = new Queue<Node<MapVertex>>();
+            Queue<Area> curLayer = new Queue<Area>();
+            Queue<Area> deeperLayer = new Queue<Area>();
             // newResolution should be pow of 2
             // -1 because last depth will divide all squares and inc depth
             int maxDepth = (int)(Math.Log(newResolution, 2)) - 1;
 
-            curLayer.Enqueue(map.val.Root);
+            curLayer.Enqueue(map);
             Pogr(curLayer, deeperLayer, 0, maxDepth);
-            map.resolution = newResolution;
         }
     }
 }

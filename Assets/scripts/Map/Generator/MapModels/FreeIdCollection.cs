@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// <summary>
 /// TODO use dll
 /// </summary>
-namespace Graph
+namespace Map.Generator.MapModels
 {
     /// <summary>
     /// Collection which offers free id to store data.

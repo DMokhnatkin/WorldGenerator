@@ -1,32 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
-using Map.Generator.SubdividedPlane;
+using Map.Generator.MapModels;
 
 namespace Map.Generator
 {
-    public class MapVertex : ICloneable
-    {
-        public float height;
-
-        public object Clone()
-        {
-            MapVertex res = new MapVertex();
-            res.height = height;
-            return res;
-        }
-
-        /// <summary>
-        /// Copy all values
-        /// </summary>
-        /// <param name="other"></param>
-        public void Copy(MapVertex other)
-        {
-            this.height = other.height;
-        }
-    }
 
     public class HeightMap
     {
+        static void FillArray(MapVertex[,] arr, Area cur, int i0, int j0, int i1, int j1)
+        {
+            if (!cur.IsSubDivided)
+            {
+                arr[i0, j0] = cur.LeftTopPoint_Val;
+                arr[i0, j1] = cur.RightTopPoint_Val;
+                arr[i1, j0] = cur.LeftDownPoint_Val;
+                arr[i1, j1] = cur.RightDownPoint_Val;
+                return;
+            }
+            FillArray(arr, cur.LeftTopChild, i0, j0, (i1 + i0) / 2, (j1 + j0) / 2);
+            FillArray(arr, cur.RightTopChild, i0, (j1 + j0) / 2, (i1 + i0) / 2, j1);
+            FillArray(arr, cur.LeftDownChild, (i1 + i0) / 2, j0, i1, (j1 + j0) / 2);
+            FillArray(arr, cur.RightDownChild, (i1 + i0) / 2, (j1 + j0) / 2, i1, j1);
+        }
+
+        private static int CalcHeight(Area cur)
+        {
+            if (!cur.IsSubDivided)
+                return 0;
+            return CalcHeight(cur.LeftDownChild) + 1;
+        }
+
+        public static MapVertex[,] AreaToArray(Area area)
+        {
+            // Calculate resolution of area
+            int resolution = (int)Math.Pow(2, CalcHeight(area));
+            MapVertex[,] res = new MapVertex[resolution + 1, resolution + 1];
+            FillArray(res, area, 0, 0, resolution, resolution);
+            return res;
+        }
+
+        /*
         /// <summary>
         /// Current resolution (Count of vertices in width - 1)
         /// </summary>
@@ -36,7 +49,7 @@ namespace Map.Generator
 
         void FillArray(MapVertex[,] arr, Node<MapVertex> cur, int i0, int j0, int i1, int j1)
         {
-            if (!cur.IsDivided)
+            if (!cur.IsSubDivided)
             {
                 arr[i0, j0] = cur.LeftTopPoint_Val;
                 arr[i0, j1] = cur.RightTopPoint_Val;
@@ -52,7 +65,7 @@ namespace Map.Generator
 
         void CollectTopEdgePoints(LinkedList<MapVertex> res, Node<MapVertex> cur)
         {
-            if (cur.IsDivided)
+            if (cur.IsSubDivided)
             {
                 CollectTopEdgePoints(res, cur.LeftTopChild);
                 CollectTopEdgePoints(res, cur.RightTopChild);
@@ -72,7 +85,7 @@ namespace Map.Generator
 
         void CollectDownEdgePoints(LinkedList<MapVertex> res, Node<MapVertex> cur)
         {
-            if (cur.IsDivided)
+            if (cur.IsSubDivided)
             {
                 CollectTopEdgePoints(res, cur.LeftDownChild);
                 CollectTopEdgePoints(res, cur.RightDownChild);
@@ -95,6 +108,6 @@ namespace Map.Generator
             MapVertex[,] res = new MapVertex[resolution + 1, resolution + 1];
             FillArray(res, val.Root, 0, 0, resolution, resolution);
             return res;
-        }
+        }*/
     }
 }
