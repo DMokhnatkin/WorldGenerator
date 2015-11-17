@@ -7,11 +7,20 @@ namespace Map.Generator.MapModels
 {
     public class MapVertex
     {
-        public float height;
+        public float Height
+        {
+            get;
+            set;
+        }
 
         public MapVertex()
         {
-            height = 0;
+            Height = float.NaN;
+        }
+
+        public bool IsGenerated
+        {
+            get { return !float.IsNaN(Height); }
         }
     }
 }

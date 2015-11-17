@@ -122,15 +122,29 @@ namespace Map.Generator.MapModels
         {
             get
             {
-                if (!IsSubDivided)
-                    throw new ArgumentException("Area is not divided");
-                return LeftTopChild.RightDownPoint_Id;
+                if (LeftTopChild != null)
+                    return LeftTopChild.RightDownPoint_Id;
+                if (RightTopChild != null)
+                    return RightTopChild.LeftDownPoint_Id;
+                if (LeftDownChild != null)
+                    return LeftDownChild.RightTopPoint_Id;
+                if (RightDownChild != null)
+                    return RightDownChild.LeftTopPoint_Id;
+                return -1;
             }
         }
         public MapVertex MiddlePt_Val
         {
-            get { return Collection.points[MiddlePt_Id]; }
-            set { Collection.points[MiddlePt_Id] = value; }
+            get
+            {
+                return MiddlePt_Id == -1 ? null : Collection.points[MiddlePt_Id];
+            }
+            set
+            {
+                if (MiddlePt_Id == -1)
+                    throw new ArgumentException("Area is not divided. Can't set middle point value");
+                Collection.points[MiddlePt_Id] = value;
+            }
         }
 
         public Area Parent { get; internal set; }
@@ -197,24 +211,30 @@ namespace Map.Generator.MapModels
             {
                 if (TopNeighbor.LeftDownChild != null)
                 {
-                    _rightTopPtId = TopNeighbor.LeftDownChild.RightDownPoint_Id;
+                    if (_rightTopPtId == -1)
+                        _rightTopPtId = TopNeighbor.LeftDownChild.RightDownPoint_Id;
                 }
             }
             if (RightTopChild != null)
             {
-                _rightTopPtId = RightTopChild.LeftTopPoint_Id;
-                _rightDownPtId = RightTopChild.LeftDownPoint_Id;
+                if (_rightTopPtId == -1)
+                    _rightTopPtId = RightTopChild.LeftTopPoint_Id;
+                if (_rightDownPtId == -1)
+                    _rightDownPtId = RightTopChild.LeftDownPoint_Id;
             }
             if (LeftDownChild != null)
             {
-                _leftDownPtId = LeftDownChild.LeftTopPoint_Id;
-                _rightDownPtId = LeftDownChild.RightTopPoint_Id;
+                if (_leftDownPtId == -1)
+                    _leftDownPtId = LeftDownChild.LeftTopPoint_Id;
+                if (_rightDownPtId == -1)
+                    _rightDownPtId = LeftDownChild.RightTopPoint_Id;
             }
             if (LeftNeighbor != null)
             {
                 if (LeftNeighbor.RightTopChild != null)
                 {
-                    _leftDownPtId = LeftNeighbor.RightTopChild.RightDownPoint_Id;
+                    if (_leftDownPtId == -1)
+                        _leftDownPtId = LeftNeighbor.RightTopChild.RightDownPoint_Id;
                 }
             }
 
@@ -260,25 +280,31 @@ namespace Map.Generator.MapModels
             {
                 if (TopNeighbor.RightDownChild != null)
                 {
-                    _leftTopPtId = TopNeighbor.RightDownChild.LeftDownPoint_Id;
+                    if (_leftTopPtId == -1)
+                        _leftTopPtId = TopNeighbor.RightDownChild.LeftDownPoint_Id;
                 }
             }
             if (RightNeighbor != null)
             {
                 if (RightNeighbor.LeftTopChild != null)
                 {
-                    _rightDownPtId = RightNeighbor.LeftTopChild.LeftDownPoint_Id;
+                    if (_rightDownPtId == -1)
+                        _rightDownPtId = RightNeighbor.LeftTopChild.LeftDownPoint_Id;
                 }
             }
             if (RightDownChild != null)
             {
-                _leftDownPtId = RightDownChild.LeftTopPoint_Id;
-                _rightDownPtId = RightDownChild.RightTopPoint_Id; ;
+                if (_leftDownPtId == -1)
+                    _leftDownPtId = RightDownChild.LeftTopPoint_Id;
+                if (_rightDownPtId == -1)
+                    _rightDownPtId = RightDownChild.RightTopPoint_Id;
             }
             if (LeftTopChild != null)
             {
-                _leftTopPtId = LeftTopChild.RightTopPoint_Id; ;
-                _leftDownPtId = LeftTopChild.RightDownPoint_Id;
+                if (_leftTopPtId == -1)
+                    _leftTopPtId = LeftTopChild.RightTopPoint_Id;
+                if (_leftDownPtId == -1)
+                    _leftDownPtId = LeftTopChild.RightDownPoint_Id;
             }
 
             RightTopChild.RightTopPoint_Id = this.RightTopPoint_Id;
@@ -321,26 +347,32 @@ namespace Map.Generator.MapModels
             // Try to use already created points
             if (LeftTopChild != null)
             {
-                _leftTopPtId = LeftTopChild.LeftDownPoint_Id; ;
-                _rightTopPtId = LeftTopChild.RightDownPoint_Id;
+                if (_leftTopPtId == -1)
+                    _leftTopPtId = LeftTopChild.LeftDownPoint_Id;
+                if (_rightTopPtId == -1)
+                    _rightTopPtId = LeftTopChild.RightDownPoint_Id;
             }
             if (RightDownChild != null)
             {
-                _rightTopPtId = RightDownChild.LeftTopPoint_Id;
-                _rightDownPtId = RightDownChild.LeftDownPoint_Id; ;
+                if (_rightTopPtId == -1)
+                    _rightTopPtId = RightDownChild.LeftTopPoint_Id;
+                if (_rightDownPtId == -1)
+                    _rightDownPtId = RightDownChild.LeftDownPoint_Id; ;
             }
             if (DownNeighbor != null)
             {
                 if (DownNeighbor.LeftTopChild != null)
                 {
-                    _rightDownPtId = DownNeighbor.LeftTopChild.RightDownPoint_Id;
+                    if (_rightDownPtId == -1)
+                        _rightDownPtId = DownNeighbor.LeftTopChild.RightDownPoint_Id;
                 }
             }
             if (LeftNeighbor != null)
             {
                 if (LeftNeighbor.RightDownChild != null)
                 {
-                    _leftTopPtId = LeftNeighbor.RightDownChild.RightTopPoint_Id;
+                    if (_leftTopPtId == -1)
+                        _leftTopPtId = LeftNeighbor.RightDownChild.RightTopPoint_Id;
                 }
             }
 
@@ -384,27 +416,33 @@ namespace Map.Generator.MapModels
             // Try to use already created points
             if (RightTopChild != null)
             {
-                _leftTopPtId = RightTopChild.LeftDownPoint_Id;
-                _rightTopPtId = RightTopChild.RightDownPoint_Id;
+                if (_leftTopPtId == -1)
+                    _leftTopPtId = RightTopChild.LeftDownPoint_Id;
+                if (_rightTopPtId == -1)
+                    _rightTopPtId = RightTopChild.RightDownPoint_Id;
             }
             if (RightNeighbor != null)
             {
                 if (RightNeighbor.LeftDownChild != null)
                 {
-                    _rightTopPtId = RightNeighbor.LeftDownChild.LeftTopPoint_Id;
+                    if (_rightTopPtId == -1)
+                        _rightTopPtId = RightNeighbor.LeftDownChild.LeftTopPoint_Id;
                 }
             }
             if (DownNeighbor != null)
             {
                 if (DownNeighbor.RightTopChild != null)
                 {
-                    _leftDownPtId = DownNeighbor.RightTopChild.LeftTopPoint_Id;
+                    if (_leftDownPtId == -1)
+                        _leftDownPtId = DownNeighbor.RightTopChild.LeftTopPoint_Id;
                 }
             }
             if (LeftDownChild != null)
             {
-                _leftTopPtId = LeftDownChild.RightTopPoint_Id;
-                _leftDownPtId = LeftDownChild.RightDownPoint_Id;
+                if (_leftTopPtId == -1)
+                    _leftTopPtId = LeftDownChild.RightTopPoint_Id;
+                if (_leftDownPtId == -1)
+                    _leftDownPtId = LeftDownChild.RightDownPoint_Id;
             }
 
             RightDownChild.RightDownPoint_Id = this.RightDownPoint_Id;
@@ -431,10 +469,48 @@ namespace Map.Generator.MapModels
         /// </summary>
         public void Subdivide()
         {
-            CreateLeftTopChild();
-            CreateRightTopChild();
-            CreateLeftDownChild();
-            CreateRightDownChild();
+            if (LeftTopChild == null)
+                CreateLeftTopChild();
+            if (RightTopChild == null)
+                CreateRightTopChild();
+            if (LeftDownChild == null)
+                CreateLeftDownChild();
+            if (RightDownChild == null)
+                CreateRightDownChild();
+        }
+
+        public void CreateTopNeighbor()
+        {
+            if (TopNeighbor != null)
+                throw new ArgumentException("TopNeighbor is already created");
+            this.Collection.CreateTopNeighbor(this);
+        }
+
+        public void CreateRightNeighbor()
+        {
+            if (RightNeighbor != null)
+                throw new ArgumentException("RightNeighbor is already created");
+            this.Collection.CreateRightNeighbor(this);
+        }
+
+        public void CreateDownNeighbor()
+        {
+            if (DownNeighbor != null)
+                throw new ArgumentException("DownNeighbor is already created");
+            this.Collection.CreateDownNeighbor(this);
+        }
+
+        public void CreateLeftNeighbor()
+        {
+            if (LeftNeighbor != null)
+                throw new ArgumentException("LeftNeighbor is already created");
+            this.Collection.CreateLeftNeighbor(this);
+        }
+
+        public override int GetHashCode()
+        {
+            return LeftTopPoint_Id.GetHashCode() * RightTopPoint_Id.GetHashCode() *
+                LeftDownPoint_Id.GetHashCode() * RightDownPoint_Id.GetHashCode();
         }
     }
 }

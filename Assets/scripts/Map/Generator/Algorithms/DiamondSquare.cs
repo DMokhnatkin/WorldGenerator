@@ -15,6 +15,11 @@ namespace Map.Generator.Algorithms
         public float minHeight = 0;
         public float maxHeight = 1;
 
+        /// <summary>
+        /// Stores generated depth of each area
+        /// </summary>
+        Dictionary<Area, int> depths = new Dictionary<Area, int>();
+
         System.Random rand = new System.Random();
 
         // For fast pow(2, ?) operation
@@ -27,21 +32,360 @@ namespace Map.Generator.Algorithms
             return pow2[degree];
         }
 
+        /// <summary>
+        /// Calculate or get random leftTop point val
+        /// </summary>
+        /// <param name="cur"></param>
+        void CalculateLeftTopValue(Area cur)
+        {
+            if (cur.LeftTopPoint_Val.IsGenerated)
+                return;
+            // Try calculate leftTopPoint val
+            // There are 4 cases
+            // ?    point which value we want to calculate
+            // +    point which value we will use (to calculate ? point)
+            // |,-  border of curent area
+            if (cur.LeftDownPoint_Val.IsGenerated &&
+                cur.LeftEdgeMiddlePt_Val.IsGenerated)
+            {
+                if (cur.MiddlePt_Val.IsGenerated &&
+                    cur.LeftNeighbor != null &&
+                    cur.LeftNeighbor.MiddlePt_Val != null &&
+                    cur.LeftNeighbor.MiddlePt_Val.IsGenerated)
+                {
+                    // #2
+                    // *|?**
+                    // +|++*
+                    // *|+**
+                    cur.LeftTopPoint_Val.Height =
+                        4 * cur.LeftEdgeMiddlePt_Val.Height -
+                        cur.MiddlePt_Val.Height -
+                        cur.LeftDownPoint_Val.Height -
+                        cur.LeftNeighbor.MiddlePt_Val.Height;
+                    return;
+                }
+                else
+                {
+                    // #1
+                    // ?**
+                    // +**
+                    // +**
+                    cur.LeftTopPoint_Val.Height =
+                        2 * cur.LeftEdgeMiddlePt_Val.Height -
+                        cur.LeftDownPoint_Val.Height;
+                }
+            }
+            else
+            {
+                if (cur.RightTopPoint_Val.IsGenerated &&
+                    cur.TopEdgeMiddlePt_Val.IsGenerated)
+                {
+                    if (cur.MiddlePt_Val.IsGenerated &&
+                        cur.TopNeighbor != null &&
+                        cur.TopNeighbor.MiddlePt_Val != null &&
+                        cur.TopNeighbor.MiddlePt_Val.IsGenerated)
+                    {
+                        // #4
+                        // *+*
+                        // ---
+                        // ?++
+                        // *+*
+                        // ***
+                        cur.LeftTopPoint_Val.Height =
+                            4 * cur.TopEdgeMiddlePt_Val.Height -
+                            cur.TopNeighbor.MiddlePt_Val.Height -
+                            cur.RightTopPoint_Val.Height -
+                            cur.MiddlePt_Val.Height;
+                    }
+                    else
+                    {
+                        // #3
+                        // ?++
+                        // ***
+                        // ***
+                        cur.LeftTopPoint_Val.Height =
+                            2 * cur.TopEdgeMiddlePt_Val.Height -
+                            cur.RightTopPoint_Val.Height;
+                    }
+                }
+            }
+            if (!cur.LeftTopPoint_Val.IsGenerated)
+                // We can't calculate value
+                // Generate random value
+                cur.LeftTopPoint_Val.Height = (float)rand.NextDouble() * maxHeight;
+        }
+
+        /// <summary>
+        /// Calculate or get random rightTop point val
+        /// </summary>
+        void CalculateRightTopValue(Area cur)
+        {
+            if (cur.RightTopPoint_Val.IsGenerated)
+                return;
+            // Try calculate rightTopPoint val
+            // There are 4 cases
+            // ?    point which value we want to calculate
+            // +    point which value we will use (to calculate ? point)
+            // |,-  border of curent area
+            if (cur.RightDownPoint_Val.IsGenerated &&
+                cur.RightEdgeMiddlePt_Val.IsGenerated)
+            {
+                if (cur.MiddlePt_Val.IsGenerated &&
+                    cur.RightNeighbor != null &&
+                    cur.RightNeighbor.MiddlePt_Val != null &&
+                    cur.RightNeighbor.MiddlePt_Val.IsGenerated)
+                {
+                    // #2
+                    // **?|*
+                    // *++|+
+                    // **+|*
+                    cur.RightTopPoint_Val.Height =
+                        4 * cur.RightEdgeMiddlePt_Val.Height -
+                        cur.MiddlePt_Val.Height -
+                        cur.RightDownPoint_Val.Height -
+                        cur.RightNeighbor.MiddlePt_Val.Height;
+                }
+                else
+                {
+                    // #1
+                    // **?
+                    // **+
+                    // **+
+                    cur.RightTopPoint_Val.Height =
+                        2 * cur.RightEdgeMiddlePt_Val.Height -
+                        cur.RightDownPoint_Val.Height;
+                }
+            }
+            else
+            {
+                if (cur.LeftTopPoint_Val.IsGenerated &&
+                    cur.TopEdgeMiddlePt_Val.IsGenerated)
+                {
+                    if (cur.MiddlePt_Val.IsGenerated &&
+                        cur.TopNeighbor != null &&
+                        cur.TopNeighbor.MiddlePt_Val != null &&
+                        cur.TopNeighbor.MiddlePt_Val.IsGenerated)
+                    {
+                        // #4
+                        // *+*
+                        // ---
+                        // ++?
+                        // *+*
+                        // ***
+                        cur.RightTopPoint_Val.Height =
+                            4 * cur.TopEdgeMiddlePt_Val.Height -
+                            cur.TopNeighbor.MiddlePt_Val.Height -
+                            cur.LeftTopPoint_Val.Height -
+                            cur.MiddlePt_Val.Height;
+                    }
+                    else
+                    {
+                        // #3
+                        // ++?
+                        // ***
+                        // ***
+                        cur.RightTopPoint_Val.Height =
+                            2 * cur.TopEdgeMiddlePt_Val.Height -
+                            cur.LeftTopPoint_Val.Height;
+                    }
+                }
+            }
+            if (!cur.RightTopPoint_Val.IsGenerated)
+                // We can't calculate value
+                // Generate random value
+                cur.RightTopPoint_Val.Height = (float)rand.NextDouble() * maxHeight;
+        }
+
+        /// <summary>
+        /// Calculate or get random leftDown point value
+        /// </summary>
+        void CalculateLeftDownValue(Area cur)
+        {
+            if (cur.LeftDownPoint_Val.IsGenerated)
+                return;
+            // Try calculate leftTopPoint val
+            // There are 4 cases
+            // ?    point which value we want to calculate
+            // +    point which value we will use (to calculate ? point)
+            // |,-  border of curent area
+            if (cur.LeftTopPoint_Val.IsGenerated &&
+                cur.LeftEdgeMiddlePt_Val.IsGenerated)
+            {
+                if (cur.MiddlePt_Val.IsGenerated &&
+                    cur.LeftNeighbor != null &&
+                    cur.LeftNeighbor.MiddlePt_Val != null &&
+                    cur.LeftNeighbor.MiddlePt_Val.IsGenerated)
+                {
+                    // #2
+                    // *|+**
+                    // +|++*
+                    // *|?**
+                    cur.LeftDownPoint_Val.Height =
+                        4 * cur.LeftEdgeMiddlePt_Val.Height -
+                        cur.MiddlePt_Val.Height -
+                        cur.LeftTopPoint_Val.Height -
+                        cur.LeftNeighbor.MiddlePt_Val.Height;
+                }
+                else
+                {
+                    // #1
+                    // +**
+                    // +**
+                    // ?**
+                    cur.LeftDownPoint_Val.Height =
+                        2 * cur.LeftEdgeMiddlePt_Val.Height -
+                        cur.LeftTopPoint_Val.Height;
+                }
+            }
+            else
+            {
+                if (cur.RightDownPoint_Val.IsGenerated &&
+                    cur.DownEdgeMiddlePt_Val.IsGenerated)
+                {
+                    if (cur.MiddlePt_Val.IsGenerated &&
+                        cur.DownNeighbor != null &&
+                        cur.DownNeighbor.MiddlePt_Val != null &&
+                        cur.DownNeighbor.MiddlePt_Val.IsGenerated)
+                    {
+                        // #4
+                        // ***
+                        // *+*
+                        // ?++
+                        // ---
+                        // *+*
+                        cur.LeftDownPoint_Val.Height =
+                            4 * cur.DownEdgeMiddlePt_Val.Height -
+                            cur.DownNeighbor.MiddlePt_Val.Height -
+                            cur.RightDownPoint_Val.Height -
+                            cur.MiddlePt_Val.Height;
+                    }
+                    else
+                    {
+                        // #3
+                        // ***
+                        // ***
+                        // ?++
+                        cur.LeftDownPoint_Val.Height =
+                            2 * cur.DownEdgeMiddlePt_Val.Height -
+                            cur.RightDownPoint_Val.Height;
+                    }
+                }
+            }
+            if (!cur.LeftDownPoint_Val.IsGenerated)
+                // We can't calculate value
+                // Generate random value
+                cur.LeftDownPoint_Val.Height = (float)rand.NextDouble() * maxHeight;
+        }
+
+        /// <summary>
+        /// Calculate or get random rightDown point value
+        /// </summary>
+        void CalculateRightDownValue(Area cur)
+        {
+            if (cur.RightDownPoint_Val.IsGenerated)
+                return;
+            // Try calculate rightTopPoint val
+            // There are 4 cases
+            // ?    point which value we want to calculate
+            // +    point which value we will use (to calculate ? point)
+            // |,-  border of curent area
+            if (cur.RightTopPoint_Val.IsGenerated &&
+                cur.RightEdgeMiddlePt_Val.IsGenerated)
+            {
+                if (cur.MiddlePt_Val.IsGenerated &&
+                    cur.RightNeighbor != null &&
+                    cur.RightNeighbor.MiddlePt_Val != null &&
+                    cur.RightNeighbor.MiddlePt_Val.IsGenerated)
+                {
+                    // #2
+                    // **+|*
+                    // *++|+
+                    // **?|*
+                    cur.RightDownPoint_Val.Height =
+                        4 * cur.RightEdgeMiddlePt_Val.Height -
+                        cur.MiddlePt_Val.Height -
+                        cur.RightTopPoint_Val.Height -
+                        cur.RightNeighbor.MiddlePt_Val.Height;
+                }
+                else
+                {
+                    // #1
+                    // **+
+                    // **+
+                    // **?
+                    cur.RightDownPoint_Val.Height =
+                        2 * cur.RightEdgeMiddlePt_Val.Height -
+                        cur.RightTopPoint_Val.Height;
+                }
+            }
+            else
+            {
+                if (cur.LeftDownPoint_Val.IsGenerated &&
+                    cur.DownEdgeMiddlePt_Val.IsGenerated)
+                {
+                    if (cur.MiddlePt_Val.IsGenerated &&
+                        cur.DownNeighbor != null &&
+                        cur.DownNeighbor.MiddlePt_Val != null &&
+                        cur.DownNeighbor.MiddlePt_Val.IsGenerated)
+                    {
+                        // #4
+                        // ***
+                        // *+*
+                        // ++?
+                        // ---
+                        // *+*
+                        cur.RightDownPoint_Val.Height =
+                            4 * cur.DownEdgeMiddlePt_Val.Height -
+                            cur.DownNeighbor.MiddlePt_Val.Height -
+                            cur.LeftDownPoint_Val.Height -
+                            cur.MiddlePt_Val.Height;
+                    }
+                    else
+                    {
+                        // #3
+                        // ***
+                        // ***
+                        // ++?
+                        cur.RightDownPoint_Val.Height =
+                            2 * cur.DownEdgeMiddlePt_Val.Height -
+                            cur.LeftDownPoint_Val.Height;
+                    }
+                }
+            }
+            if (!cur.RightDownPoint_Val.IsGenerated)
+                // We can't calculate value
+                // Generate random value
+                cur.RightDownPoint_Val.Height = (float)rand.NextDouble() * maxHeight;
+        }
+
         void Square(Area cur, float appl)
         {
             float maxOffset = appl * strength;
 
-            cur.MiddlePt_Val.height =
-                (cur.LeftTopPoint_Val.height + cur.RightTopPoint_Val.height +
-                cur.LeftDownPoint_Val.height + cur.RightDownPoint_Val.height) / 4.0f;
+            if (!cur.LeftTopPoint_Val.IsGenerated)
+                CalculateLeftTopValue(cur);
+            if (!cur.RightTopPoint_Val.IsGenerated)
+                CalculateRightTopValue(cur);
+            if (!cur.LeftDownPoint_Val.IsGenerated)
+                CalculateLeftDownValue(cur);
+            if (!cur.RightDownPoint_Val.IsGenerated)
+                CalculateRightDownValue(cur);
 
-            float _displacement = ((float)rand.NextDouble() * (2 * maxOffset) - maxOffset);
-            if (cur.MiddlePt_Val.height + _displacement > maxHeight)
-                _displacement *= -1;
-            if (cur.MiddlePt_Val.height + _displacement < minHeight)
-                _displacement *= -1;
+            if (!cur.MiddlePt_Val.IsGenerated)
+            {
+                // We have 4 corners, generate middle pt
+                cur.MiddlePt_Val.Height =
+                (cur.LeftTopPoint_Val.Height + cur.RightTopPoint_Val.Height +
+                cur.LeftDownPoint_Val.Height + cur.RightDownPoint_Val.Height) / 4.0f;
 
-            cur.MiddlePt_Val.height += _displacement;
+                float _displacement = ((float)rand.NextDouble() * (2 * maxOffset) - maxOffset);
+                if (cur.MiddlePt_Val.Height + _displacement > maxHeight)
+                    _displacement *= -0.5f;
+                if (cur.MiddlePt_Val.Height + _displacement < minHeight)
+                    _displacement *= -0.5f;
+
+                cur.MiddlePt_Val.Height += _displacement;
+            }
         }
 
         void Diamond(Area cur)
@@ -56,76 +400,68 @@ namespace Map.Generator.Algorithms
             if (!cur.IsSubDivided)
                 cur.Subdivide();
 
-            if (cur.Parent != null)
-            {
-                if (cur.IsLeftTopChild)
-                {
-                    // There is no left and top relative points
-                    if (cur.Parent.RightTopChild.IsSubDivided)
-                        _rightRelativePtVal = cur.Parent.RightTopChild.MiddlePt_Val;
-                    if (cur.Parent.LeftDownChild.IsSubDivided)
-                        _downRelativePtVal = cur.Parent.LeftDownChild.MiddlePt_Val;
-                }
-                if (cur.IsRightTopChild)
-                {
-                    // There is no top and right relative points
-                    if (cur.Parent.LeftTopChild.IsSubDivided)
-                        _leftRelativePtVal = cur.Parent.LeftTopChild.MiddlePt_Val;
-                    if (cur.Parent.RightDownChild.IsSubDivided)
-                        _downRelativePtVal = cur.Parent.RightDownChild.MiddlePt_Val;
-                }
-                if (cur.IsLeftDownChild)
-                {
-                    // There is no left and down relative points
-                    if (cur.Parent.LeftTopChild.IsSubDivided)
-                        _topRelativePtVal = cur.Parent.LeftTopChild.MiddlePt_Val;
-                    if (cur.Parent.RightDownChild.IsSubDivided)
-                        _rightRelativePtVal = cur.Parent.RightDownChild.MiddlePt_Val;
-                }
-                if (cur.IsRightDownChild)
-                {
-                    // There is no down and right relative points
-                    if (cur.Parent.RightTopChild.IsSubDivided)
-                        _topRelativePtVal = cur.Parent.RightTopChild.MiddlePt_Val;
-                    if (cur.Parent.LeftDownChild.IsSubDivided)
-                        _leftRelativePtVal = cur.Parent.LeftDownChild.MiddlePt_Val;
-                }
-            }
+            // Try get relative points from neighbors. 
+            // If neighbor is not divided MiddlePt_Val will return null
+            if (cur.TopNeighbor != null)
+                _topRelativePtVal = cur.TopNeighbor.MiddlePt_Val;
+
+            if (cur.RightNeighbor != null)
+                _rightRelativePtVal = cur.RightNeighbor.MiddlePt_Val;
+
+            if (cur.DownNeighbor != null)
+                _downRelativePtVal = cur.DownNeighbor.MiddlePt_Val;
+
+            if (cur.LeftNeighbor != null)
+                _leftRelativePtVal = cur.LeftNeighbor.MiddlePt_Val;
+
               
-            if (_topRelativePtVal != null)
-                cur.TopEdgeMiddlePt_Val.height =
-                    (cur.LeftTopPoint_Val.height + _topRelativePtVal.height + 
-                    cur.RightTopPoint_Val.height + cur.MiddlePt_Val.height) / 4.0f;
-            else
-                cur.TopEdgeMiddlePt_Val.height =
-                    (cur.LeftTopPoint_Val.height + cur.RightTopPoint_Val.height) / 2.0f;
+            if (!cur.TopEdgeMiddlePt_Val.IsGenerated)
+            {
+                if (_topRelativePtVal != null)
+                    cur.TopEdgeMiddlePt_Val.Height =
+                        (cur.LeftTopPoint_Val.Height + _topRelativePtVal.Height + 
+                        cur.RightTopPoint_Val.Height + cur.MiddlePt_Val.Height) / 4.0f;
+                else
+                    cur.TopEdgeMiddlePt_Val.Height =
+                        (cur.LeftTopPoint_Val.Height + cur.RightTopPoint_Val.Height) / 2.0f;
+            }
+                
 
-            if (_rightRelativePtVal != null)
-                cur.RightEdgeMiddlePt_Val.height =
-                    (cur.RightTopPoint_Val.height + _rightRelativePtVal.height +
-                    cur.RightDownPoint_Val.height + cur.MiddlePt_Val.height) / 4.0f;
-            else
-                cur.RightEdgeMiddlePt_Val.height =
-                    (cur.RightTopPoint_Val.height + cur.RightDownPoint_Val.height) / 2.0f;
+            if (!cur.RightEdgeMiddlePt_Val.IsGenerated)
+            {
+                if (_rightRelativePtVal != null)
+                    cur.RightEdgeMiddlePt_Val.Height =
+                        (cur.RightTopPoint_Val.Height + _rightRelativePtVal.Height +
+                        cur.RightDownPoint_Val.Height + cur.MiddlePt_Val.Height) / 4.0f;
+                else
+                    cur.RightEdgeMiddlePt_Val.Height =
+                        (cur.RightTopPoint_Val.Height + cur.RightDownPoint_Val.Height) / 2.0f;
+            }
 
-            if (_downRelativePtVal != null)
-                cur.DownEdgeMiddlePt_Val.height =
-                    (cur.MiddlePt_Val.height + cur.RightDownPoint_Val.height +
-                    _downRelativePtVal.height + cur.LeftDownPoint_Val.height) / 4.0f;
-            else
-                cur.DownEdgeMiddlePt_Val.height =
-                    (cur.LeftDownPoint_Val.height + cur.RightDownPoint_Val.height) / 2.0f;
-
-            if (_leftRelativePtVal != null)
-                cur.LeftEdgeMiddlePt_Val.height =
-                    (cur.LeftTopPoint_Val.height + cur.MiddlePt_Val.height + 
-                    cur.LeftDownPoint_Val.height + _leftRelativePtVal.height) / 4.0f;
-            else
-                cur.LeftEdgeMiddlePt_Val.height =
-                    (cur.LeftTopPoint_Val.height + cur.LeftDownPoint_Val.height) / 2.0f;
+            if (!cur.DownEdgeMiddlePt_Val.IsGenerated)
+            {
+                if (_downRelativePtVal != null)
+                    cur.DownEdgeMiddlePt_Val.Height =
+                        (cur.MiddlePt_Val.Height + cur.RightDownPoint_Val.Height +
+                        _downRelativePtVal.Height + cur.LeftDownPoint_Val.Height) / 4.0f;
+                else
+                    cur.DownEdgeMiddlePt_Val.Height =
+                        (cur.LeftDownPoint_Val.Height + cur.RightDownPoint_Val.Height) / 2.0f;
+            }
+            
+            if (!cur.LeftEdgeMiddlePt_Val.IsGenerated)
+            {
+                if (_leftRelativePtVal != null)
+                    cur.LeftEdgeMiddlePt_Val.Height =
+                        (cur.LeftTopPoint_Val.Height + cur.MiddlePt_Val.Height +
+                        cur.LeftDownPoint_Val.Height + _leftRelativePtVal.Height) / 4.0f;
+                else
+                    cur.LeftEdgeMiddlePt_Val.Height =
+                        (cur.LeftTopPoint_Val.Height + cur.LeftDownPoint_Val.Height) / 2.0f;
+            }
         }
 
-        void Pogr(Queue<Area> curLayer, Queue<Area> nextLayer, int curDepth, int maxDepth)
+        void Pogr(Queue<Area> curLayer, Queue<Area> nextLayer, int curDepth, int maxDepth, int generatedDepth)
         {
             if (curLayer.Count == 0)
                 return;
@@ -133,10 +469,12 @@ namespace Map.Generator.Algorithms
             // Square current layer and collect areas to nextLayer
             foreach (Area z in curLayer)
             {
-                if (!z.IsSubDivided)
+                if (curDepth > generatedDepth)
                 {
-                    z.Subdivide();
-                    Square(z, (maxHeight - minHeight) / (float)GetPow2(curDepth + 1));
+                    if (!z.IsSubDivided)
+                        z.Subdivide();
+                    if (!z.MiddlePt_Val.IsGenerated)
+                        Square(z, (maxHeight - minHeight) / (float)GetPow2(curDepth + 1));
                 }
 
                 if (curDepth == maxDepth)
@@ -146,27 +484,31 @@ namespace Map.Generator.Algorithms
                 nextLayer.Enqueue(z.LeftDownChild);
                 nextLayer.Enqueue(z.RightDownChild);
             }
-            // Diamond current layer
-            foreach (Area z in curLayer)
-            {
-                Diamond(z);
-            }
+            if (curDepth > generatedDepth)
+                // Diamond current layer
+                foreach (Area z in curLayer)
+                {
+                    Diamond(z);
+                }
 
             curLayer = nextLayer;
             nextLayer = new Queue<Area>();
-            Pogr(curLayer, nextLayer, curDepth + 1, maxDepth);
+            Pogr(curLayer, nextLayer, curDepth + 1, maxDepth, generatedDepth);
         }
 
-        public void ExtendResolution(Area map, int newResolution)
+        public void ExtendResolution(Area map, byte depth)
         {
             Queue<Area> curLayer = new Queue<Area>();
             Queue<Area> deeperLayer = new Queue<Area>();
-            // newResolution should be pow of 2
-            // -1 because last depth will divide all squares and inc depth
-            int maxDepth = (int)(Math.Log(newResolution, 2)) - 1;
 
             curLayer.Enqueue(map);
-            Pogr(curLayer, deeperLayer, 0, maxDepth);
+            int generatedDepth = -1;
+            if (depths.ContainsKey(map))
+                generatedDepth = depths[map];
+            else
+                depths.Add(map, -1);
+            Pogr(curLayer, deeperLayer, 1, depth, generatedDepth);
+            depths[map] = depth;
         }
     }
 }
