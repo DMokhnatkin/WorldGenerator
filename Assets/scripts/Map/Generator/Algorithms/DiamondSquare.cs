@@ -358,6 +358,70 @@ namespace Map.Generator.Algorithms
                 cur.RightDownPoint_Val.Height = (float)rand.NextDouble() * maxHeight;
         }
 
+        void ExtendArea(Area cur)
+        {
+            // x0  x1  x2  x3
+            // x4  x5  x6  x7
+            // x8  x9  x10 x11
+            // x12 x13 x14 x15
+            //
+            // Current area (already created) is
+            // x5 x6
+            // x9 x10
+            // 
+            // (from square operation)
+            // x2 + x0 + x8 = 4*x5 - x10,
+            // x3 + x1 + x11 = 4 * x6 - x9,
+            // x4 + x12 + x14 = 4 * x9 - x6,
+            // x13 + x7 + x15 = 4 * x10 - x5,
+            // (from diamond for each cur area corner)
+            // x1 + x4 = 4 * x5 - x9 - x6,
+            // x2 + x7 = 4 * x6 - x5 - x10,
+            // x8 + x13 = 4 * x9 - x5 - x10,
+            // x11 + x14 = 4 * x10 - x6 - x9,
+            // x0 + x3 + x12 + x15 = x5 + x6 + x9 + x10,
+            // (from diamond for borders operation)
+            // x0 + x2 = 2 * x1,
+            // x1 + x3 = 2 * x2,
+            // x3 + x11 = 2 * x7,
+            // x7 + x15 = 2 * x11,
+            // x15 + x13 = 2 * x14,
+            // x14 + x12 = 2 * x13,
+            // x4 + x12 = 2 * x8,
+            // x0 + x8 = 2 * x4
+            //
+            // Answer is:
+            // x0 -> x10 + 4 x5 - 2 x6 - 2 x9, 
+            // x1-> 2 x5 - x9, 
+            // x2-> - x10 + 2 x6, 
+            // x3-> - 2 x10 - 2 x5 + 4 x6 + x9, 
+            // x4-> 2 x5 - x6, 
+            // x7-> - x5 + 2 x6, 
+            // x8-> - x10 + 2 x9, 
+            // x11-> 2 x10 - x9, 
+            // x12-> - 2 x10 - 2 x5 + x6 + 4 x9, 
+            // x13-> - x5 + 2 x9, 
+            // x14-> 2 x10 - x6, 
+            // x15-> 4 x10 + x5 - 2 x6 - 2 x9
+            if (cur.TopNeighbor == null)
+                cur.CreateTopNeighbor();
+            if (cur.RightNeighbor == null)
+                cur.CreateRightNeighbor();
+            if (cur.DownNeighbor == null)
+                cur.CreateDownNeighbor();
+            if (cur.LeftNeighbor == null)
+                cur.CreateLeftNeighbor();
+
+            if (cur.LeftNeighbor.TopNeighbor == null)
+                cur.LeftNeighbor.CreateTopNeighbor();
+            if (cur.LeftNeighbor.DownNeighbor == null)
+                cur.LeftNeighbor.CreateDownNeighbor();
+            if (cur.RightNeighbor.TopNeighbor == null)
+                cur.RightNeighbor.CreateTopNeighbor();
+            if (cur.RightNeighbor.DownNeighbor == null)
+                cur.RightNeighbor.CreateDownNeighbor();
+        }
+
         void Square(Area cur, float appl)
         {
             float maxOffset = appl * strength;

@@ -92,9 +92,10 @@ namespace Map.Generator.World
             if (depth == sett.HightQualityDepth)
             {
                 TerrainData tData = new TerrainData();
-                tData.heightmapResolution = (int)sett.chunkSize / sett.unitPerPixel + 1;
+                float[,] h = ToHeightMap(areaChunk);
+                tData.heightmapResolution = h.GetLength(0);
                 tData.size = new Vector3((int)sett.chunkSize, sett.height, (int)sett.chunkSize);
-                tData.SetHeights(0, 0, ToHeightMap(areaChunk, sett));
+                tData.SetHeights(0, 0, h);
 
                 SplatPrototype newSplat = new SplatPrototype();
                 newSplat.texture = sett.baseTexture;
@@ -102,7 +103,7 @@ namespace Map.Generator.World
                 tData.splatPrototypes = new SplatPrototype[] { newSplat };
 
                 terr = Terrain.CreateTerrainGameObject(tData);
-                terr.GetComponent<Terrain>().heightmapPixelError = 1;
+                //terr.GetComponent<Terrain>().heightmapPixelError = 1;
                 terr.transform.position = new Vector3(pos.x, 0, pos.y);
             }
 
@@ -155,84 +156,38 @@ namespace Map.Generator.World
                 // Generate vertical chunks
                 for (int j = 0; j < _hightQualityCt + _mediumQualityCt + _lowQualityCt; j++)
                 {
+                    byte curDepth;
                     if (j < _hightQualityCt)
-                    {
-                            TryGenerateSingleChunk(vertCurUp_Right,
-                                leftDownPt + new Vector2(i * (int)sett.chunkSize, j * (int)sett.chunkSize),
-                                sett.HightQualityDepth,
-                                sett);
-                        yield return null;
-                            TryGenerateSingleChunk(vertCurDown_Right,
-                                leftDownPt + new Vector2(i * (int)sett.chunkSize, -j * (int)sett.chunkSize),
-                                sett.HightQualityDepth,
-                                sett);
-                        // Left part
-                        yield return null;
-                            TryGenerateSingleChunk(vertCurUp_Left,
-                                leftDownPt + new Vector2(-i * (int)sett.chunkSize, j * (int)sett.chunkSize),
-                                sett.HightQualityDepth,
-                                sett);
-                        yield return
-                        TryGenerateSingleChunk(vertCurDown_Left,
-                                leftDownPt + new Vector2(-i * (int)sett.chunkSize, -j * (int)sett.chunkSize),
-                                sett.HightQualityDepth,
-                                sett);
-                        yield return null;
-                    }
+                        curDepth = sett.HightQualityDepth;
                     else
                     {
                         if (j < _hightQualityCt + _mediumQualityCt)
-                        {
-                                TryGenerateSingleChunk(vertCurUp_Right, 
-                                    leftDownPt + new Vector2(i * (int)sett.chunkSize, j * (int)sett.chunkSize),
-                                    sett.MediumQualityDepth,
-                                    sett);
-                            yield return null;
-                                    TryGenerateSingleChunk(vertCurDown_Right,
-                                    leftDownPt + new Vector2(i * (int)sett.chunkSize, -j * (int)sett.chunkSize),
-                                    sett.MediumQualityDepth,
-                                    sett);
-                            // Left part
-                            yield return null;
-                                TryGenerateSingleChunk(vertCurUp_Left,
-                                leftDownPt + new Vector2(-i * (int)sett.chunkSize, j * (int)sett.chunkSize),
-                                sett.MediumQualityDepth,
-                                sett);
-                            yield return null;
-                                TryGenerateSingleChunk(vertCurDown_Left,
-                                leftDownPt + new Vector2(-i * (int)sett.chunkSize, -j * (int)sett.chunkSize),
-                                sett.MediumQualityDepth,
-                                sett);
-                            yield return null;
-                        }
+                            curDepth = sett.MediumQualityDepth;
                         else
-                        {
-                                TryGenerateSingleChunk(vertCurUp_Right,
-                                leftDownPt + new Vector2(i * (int)sett.chunkSize, j * (int)sett.chunkSize),
-                                sett.LowQualityDepth,
-                                sett);
-
-                            yield return null;
-                                TryGenerateSingleChunk(vertCurDown_Right,
-                                leftDownPt + new Vector2(i * (int)sett.chunkSize, -j * (int)sett.chunkSize),
-                                sett.LowQualityDepth,
-                                sett);
-
-                            // Left part
-                            yield return null;
-                                TryGenerateSingleChunk(vertCurUp_Left,
-                                leftDownPt + new Vector2(-i * (int)sett.chunkSize, j * (int)sett.chunkSize),
-                                sett.LowQualityDepth,
-                                sett);
-
-                            yield return null;
-                                TryGenerateSingleChunk(vertCurDown_Left,
-                                leftDownPt + new Vector2(-i * (int)sett.chunkSize, -j * (int)sett.chunkSize),
-                                sett.LowQualityDepth,
-                                sett);
-                            yield return null;
-                        }
+                            curDepth = sett.LowQualityDepth;
                     }
+
+                    TryGenerateSingleChunk(vertCurUp_Right,
+                        leftDownPt + new Vector2(i * (int)sett.chunkSize, j * (int)sett.chunkSize),
+                        curDepth,
+                        sett);
+                    yield return null;
+                    TryGenerateSingleChunk(vertCurDown_Right,
+                        leftDownPt + new Vector2(i * (int)sett.chunkSize, -j * (int)sett.chunkSize),
+                        curDepth,
+                        sett);
+                    // Left part
+                    yield return null;
+                    TryGenerateSingleChunk(vertCurUp_Left,
+                        leftDownPt + new Vector2(-i * (int)sett.chunkSize, j * (int)sett.chunkSize),
+                        curDepth,
+                        sett);
+                    yield return
+                    TryGenerateSingleChunk(vertCurDown_Left,
+                            leftDownPt + new Vector2(-i * (int)sett.chunkSize, -j * (int)sett.chunkSize),
+                            curDepth,
+                            sett);
+                    yield return null;
 
                     if (vertCurUp_Right.TopNeighbor == null)
                         vertCurUp_Right.CreateTopNeighbor();
@@ -262,10 +217,10 @@ namespace Map.Generator.World
             _generating = false;
         }
 
-        private float[,] ToHeightMap(Area chunkArea, LandscapeSettings sett)
+        private float[,] ToHeightMap(Area chunkArea)
         {
-            MapVertex[,] map = HeightMap.AreaToArray(chunkArea);
-            float[,] heights = new float[(int)sett.chunkSize / sett.unitPerPixel + 1, (int)sett.chunkSize / sett.unitPerPixel + 1];
+            MapVertex[,] map = chunkArea.ToArray();
+            float[,] heights = new float[map.GetLength(0), map.GetLength(1)];
             for (int i = 0; i < map.GetLength(0); i++)
                 for (int j = 0; j < map.GetLength(1); j++)
                     heights[heights.GetLength(0) - 1 - i, j] = map[i, j].Height;

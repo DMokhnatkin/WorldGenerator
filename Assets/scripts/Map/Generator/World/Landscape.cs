@@ -26,20 +26,37 @@ namespace Map.Generator.World
 
         System.Random rand = new System.Random();
 
-        public Area CurArea { get { return curChunk.Area; } }
+        public Area CurArea
+        {
+            get
+            {
+                if (curChunk == null)
+                    return null;
+                else
+                    return curChunk.Area;
+            }
+        }
 
         public GameObject CurChunkModel { get { return curChunk.GeneratedObject; } }
+
+        public AreaTree MapModel { get { return model; } }
 
         void Start()
         {
             settings = GetComponent<LandscapeSettings>();
 
-            settings.HightQualityDepth = (byte)Math.Log((int)settings.chunkSize / settings.unitPerPixel, 2);
             model = new AreaTree();
 
             curChunk = generator.TryGenerateSingleChunk(model.Root,
                                 new Vector2(player.transform.position.x - (int)settings.chunkSize / 2.0f,
                                 player.transform.position.z - (int)settings.chunkSize / 2.0f),
+                                settings.HightQualityDepth,
+                                settings);
+
+            CurArea.CreateTopNeighbor();
+            generator.TryGenerateSingleChunk(CurArea.TopNeighbor,
+                new Vector2(player.transform.position.x - (int)settings.chunkSize / 2.0f,
+                                player.transform.position.z - (int)settings.chunkSize / 2.0f + (int)settings.chunkSize),
                                 settings.HightQualityDepth,
                                 settings);
 
