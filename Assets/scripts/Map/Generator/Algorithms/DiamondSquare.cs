@@ -15,21 +15,30 @@ namespace Map.Generator.Algorithms
         public float minHeight = 0;
         public float maxHeight = 1;
 
-        /// <summary>
-        /// Stores generated depth of each area
-        /// </summary>
-        Dictionary<Area, int> depths = new Dictionary<Area, int>();
-
         System.Random rand = new System.Random();
 
         // For fast pow(2, ?) operation
         List<int> pow2 = new List<int>(new int[] { 1, 2, 4, 8, 16, 32, 64 });
+
+        /// Stores generated depth of each area
+        Dictionary<Area, int> depths = new Dictionary<Area, int>();
+
+        // To store generated areas for extend resolution
+        Dictionary<Area, Queue<Area>> cash = new Dictionary<Area, Queue<Area>>();
+
+        // To delete already generated areas from queue
+        private byte _maxDepth;
 
         int GetPow2(int degree)
         {
             while (pow2.Count <= degree)
                 pow2.Add(pow2[pow2.Count - 1] * 2);
             return pow2[degree];
+        }
+
+        public DiamondSquare(byte maxDepth)
+        {
+            _maxDepth = maxDepth;
         }
 
         /// <summary>
@@ -525,54 +534,78 @@ namespace Map.Generator.Algorithms
             }
         }
 
-        void Pogr(Queue<Area> curLayer, Queue<Area> nextLayer, int curDepth, int maxDepth, int generatedDepth)
-        {
-            if (curLayer.Count == 0)
-                return;
+        Queue<Area> curLayer = new Queue<Area>();
 
+
+        void Pogr(int curDepth, int depth)
+        {
+            Queue<Area> nextLayer = new Queue<Area>();
             // Square current layer and collect areas to nextLayer
             foreach (Area z in curLayer)
             {
-                if (curDepth > generatedDepth)
-                {
-                    if (!z.IsSubDivided)
-                        z.Subdivide();
-                    if (!z.MiddlePt_Val.IsGenerated)
-                        Square(z, (maxHeight - minHeight) / (float)GetPow2(curDepth + 1));
-                }
+                if (!z.IsSubDivided)
+                    z.Subdivide();
+                if (!z.MiddlePt_Val.IsGenerated)
+                    Square(z, (maxHeight - minHeight) / (float)GetPow2(curDepth + 1));
 
-                if (curDepth == maxDepth)
+                // If it is max depth, ignore childs
+                if (curDepth + 1 == _maxDepth)
                     continue;
                 nextLayer.Enqueue(z.LeftTopChild);
                 nextLayer.Enqueue(z.RightTopChild);
                 nextLayer.Enqueue(z.LeftDownChild);
                 nextLayer.Enqueue(z.RightDownChild);
             }
-            if (curDepth > generatedDepth)
-                // Diamond current layer
-                foreach (Area z in curLayer)
-                {
-                    Diamond(z);
-                }
+            // Diamond current layer
+            foreach (Area z in curLayer)
+            {
+                Diamond(z);
+            }
 
             curLayer = nextLayer;
             nextLayer = new Queue<Area>();
-            Pogr(curLayer, nextLayer, curDepth + 1, maxDepth, generatedDepth);
+            if (curDepth + 1 < depth)
+                Pogr(curDepth + 1, depth);
         }
 
         public void ExtendResolution(Area map, byte depth)
         {
-            Queue<Area> curLayer = new Queue<Area>();
-            Queue<Area> deeperLayer = new Queue<Area>();
+            if (depth > _maxDepth)
+                throw new ArgumentException("depth > _maxDepth");
+            map.CreateAreasAround(depth);
+            for (int i = 1; i <= depth; i++)
+            {
+                Area[,] areas = map.GetAreasAround(depth - i);
+                foreach (Area t in areas)
+                {
+                    if (cash.ContainsKey(t))
+                        curLayer = cash[t]; // Get founded before layer
+                    else
+                        curLayer = new Queue<Area>(new Area[] { t } );
 
-            curLayer.Enqueue(map);
-            int generatedDepth = -1;
-            if (depths.ContainsKey(map))
-                generatedDepth = depths[map];
-            else
-                depths.Add(map, -1);
-            Pogr(curLayer, deeperLayer, 1, depth, generatedDepth);
-            depths[map] = depth;
+                    int curDepth = 0;
+                    if (depths.ContainsKey(t))
+                        curDepth = depths[t];
+
+                    Pogr(curDepth, i);
+
+                    if (i == _maxDepth)
+                        cash.Remove(t); // We extend this area to maxDepth
+                    else
+                    {
+                        if (cash.ContainsKey(t))
+                            cash[t] = curLayer;
+                        else
+                            cash.Add(t, curLayer);
+                    }
+
+                    if (depths.ContainsKey(t))
+                        depths[t] = i;
+                    else
+                        depths.Add(t, i);
+                }
+            }
         }
+
     }
 }

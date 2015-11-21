@@ -53,14 +53,7 @@ namespace Map.Generator.World
                                 settings.HightQualityDepth,
                                 settings);
 
-            CurArea.CreateTopNeighbor();
-            generator.TryGenerateSingleChunk(CurArea.TopNeighbor,
-                new Vector2(player.transform.position.x - (int)settings.chunkSize / 2.0f,
-                                player.transform.position.z - (int)settings.chunkSize / 2.0f + (int)settings.chunkSize),
-                                settings.HightQualityDepth,
-                                settings);
-
-            StartCoroutine(generator.GenerateAround(curChunk.Area, settings));
+            // StartCoroutine(generator.GenerateAround(curChunk.Area, settings));
         }
 
         void FixedUpdate()

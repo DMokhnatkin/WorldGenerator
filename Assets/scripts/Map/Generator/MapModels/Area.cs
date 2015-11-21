@@ -512,5 +512,11 @@ namespace Map.Generator.MapModels
             return LeftTopPoint_Id.GetHashCode() * RightTopPoint_Id.GetHashCode() *
                 LeftDownPoint_Id.GetHashCode() * RightDownPoint_Id.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            return LeftTopPoint_Id + " " + RightTopPoint_Id + " " +
+                LeftDownPoint_Id + " " + RightDownPoint_Id;
+        }
     }
 }

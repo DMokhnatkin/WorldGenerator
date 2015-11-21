@@ -18,10 +18,31 @@ namespace Map.Generator.Debugger
 
         public int depthLayer = -1;
 
+        public int neighborsRadius = -1;
+
         void OnEnable()
         {
             land = GetComponent<Landscape>();
             sett = GetComponent<LandscapeSettings>();
+        }
+
+        void DrawArea(Area area, int depth, Vector2 leftTop)
+        {
+            int resolution = (int)Math.Pow(2, depth);
+            float edgeLentgh = (int)sett.chunkSize / (float)resolution;
+
+            MapVertex[,] map = area.ToArray(depth);
+
+            for (int i = 0; i < map.GetLength(0) - 1; i++)
+                for (int j = 0; j < map.GetLength(1) - 1; j++)
+                {
+                    Gizmos.DrawLine(
+                        new Vector3(leftTop.x + j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, leftTop.y - i * edgeLentgh),
+                        new Vector3(leftTop.x + (j + 1) * edgeLentgh, map[i, j + 1].Height * sett.height + verticalGridOffset, leftTop.y - i * edgeLentgh));
+                    Gizmos.DrawLine(
+                        new Vector3(leftTop.x + j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, leftTop.y - i * edgeLentgh),
+                        new Vector3(leftTop.x + j * edgeLentgh, map[i + 1, j].Height * sett.height + verticalGridOffset, leftTop.y - (i + 1) * edgeLentgh));
+                }
         }
 
         void OnDrawGizmos()
@@ -46,24 +67,18 @@ namespace Map.Generator.Debugger
                     Debug.LogWarning("depthLayer > depth of area. depthLayer was setted to depth");
                 }
 
-                land.CurArea.ToArray(depthLayer);
+                if (neighborsRadius == -1)
+                {
+                    neighborsRadius = depthLayer;
+                }
 
-                int resolution = (int)Math.Pow(2, depthLayer);
-                float edgeLentgh = (int)sett.chunkSize / (float)resolution;
-
-                MapVertex[,] map = land.CurArea.ToArray(depthLayer);
-
-                Vector2 leftTop = new Vector2(land.CurChunkModel.transform.position.x, land.CurChunkModel.transform.position.z + (int)sett.chunkSize);
-
-                for (int i = 0; i < map.GetLength(0) - 1; i++)
-                    for (int j = 0; j < map.GetLength(1) - 1; j++)
+                Area[,] z = land.CurArea.GetAreasAround(neighborsRadius);
+                for (int i = 0; i < z.GetLength(0); i++)
+                    for (int j = 0; j < z.GetLength(1); j++)
                     {
-                        Gizmos.DrawLine(
-                            new Vector3(leftTop.x + j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, leftTop.y - i * edgeLentgh),
-                            new Vector3(leftTop.x + (j + 1) * edgeLentgh, map[i, j + 1].Height * sett.height + verticalGridOffset, leftTop.y - i * edgeLentgh));
-                        Gizmos.DrawLine(
-                            new Vector3(leftTop.x + j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, leftTop.y - i * edgeLentgh),
-                            new Vector3(leftTop.x + j * edgeLentgh, map[i + 1, j].Height * sett.height + verticalGridOffset, leftTop.y - (i + 1) * edgeLentgh));
+                        Vector2 leftTop = new Vector2(land.CurChunkModel.transform.position.x + (j - neighborsRadius) * (int) sett.chunkSize, 
+                            land.CurChunkModel.transform.position.z + (neighborsRadius - i + 1) * (int)sett.chunkSize);
+                        DrawArea(z[i, j], z[i, j].CalcDepth(), leftTop);
                     }
             }
         }

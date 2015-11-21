@@ -29,16 +29,6 @@ namespace Map.Generator.World
         }
 
         /// <summary>
-        /// Get already generated depth
-        /// </summary>
-        public byte GeneratedDepth(Area area)
-        {
-            if (!chunksInfo.ContainsKey(area))
-                return 0;
-            return chunksInfo[area].GeneratedDepth;
-        }
-
-        /// <summary>
         /// Get chunk for area
         /// </summary>
         /// <param name="area"></param>
@@ -70,21 +60,12 @@ namespace Map.Generator.World
                 return chunksInfo[areaChunk];
             }
 
-            if (chunksInfo.ContainsKey(areaChunk))
-            {
-                if (chunksInfo[areaChunk].GeneratedDepth >= depth)
-                {
-                    // Already deeper
-                    return chunksInfo[areaChunk];
-                }
-            }
-
             if (!chunksInfo.ContainsKey(areaChunk))
             {
-                chunksInfo.Add(areaChunk, new Chunk(areaChunk, null, depth));
+                chunksInfo.Add(areaChunk, new Chunk(areaChunk, null));
             }
 
-            DiamondSquare sq = new DiamondSquare() { strength = 0.2f, minHeight = 0, maxHeight = 1 };
+            DiamondSquare sq = new DiamondSquare(sett.HightQualityDepth) { strength = 0.2f, minHeight = 0, maxHeight = 1 };
             sq.ExtendResolution(areaChunk, depth);
 
             // If depth == maxChunkDepth, create new gameobject
@@ -108,7 +89,7 @@ namespace Map.Generator.World
             }
 
             chunksInfo[areaChunk].GeneratedObject = terr;
-            chunksInfo[areaChunk].GeneratedDepth = depth;
+            //chunksInfo[areaChunk].GeneratedDepth = depth;
 
             return chunksInfo[areaChunk];
         }
