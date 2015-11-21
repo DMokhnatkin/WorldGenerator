@@ -444,21 +444,18 @@ namespace Map.Generator.Algorithms
             if (!cur.RightDownPoint_Val.IsGenerated)
                 CalculateRightDownValue(cur);
 
-            if (!cur.MiddlePt_Val.IsGenerated)
-            {
-                // We have 4 corners, generate middle pt
-                cur.MiddlePt_Val.Height =
-                (cur.LeftTopPoint_Val.Height + cur.RightTopPoint_Val.Height +
-                cur.LeftDownPoint_Val.Height + cur.RightDownPoint_Val.Height) / 4.0f;
+            // We have 4 corners, generate middle pt
+            cur.MiddlePt_Val.Height =
+            (cur.LeftTopPoint_Val.Height + cur.RightTopPoint_Val.Height +
+            cur.LeftDownPoint_Val.Height + cur.RightDownPoint_Val.Height) / 4.0f;
 
-                float _displacement = ((float)rand.NextDouble() * (2 * maxOffset) - maxOffset);
-                if (cur.MiddlePt_Val.Height + _displacement > maxHeight)
-                    _displacement *= -0.5f;
-                if (cur.MiddlePt_Val.Height + _displacement < minHeight)
-                    _displacement *= -0.5f;
+            float _displacement = ((float)rand.NextDouble() * (2 * maxOffset) - maxOffset);
+            if (cur.MiddlePt_Val.Height + _displacement > maxHeight)
+                _displacement *= -0.5f;
+            if (cur.MiddlePt_Val.Height + _displacement < minHeight)
+                _displacement *= -0.5f;
 
-                cur.MiddlePt_Val.Height += _displacement;
-            }
+            cur.MiddlePt_Val.Height += _displacement;
         }
 
         void Diamond(Area cur)
@@ -487,58 +484,47 @@ namespace Map.Generator.Algorithms
             if (cur.LeftNeighbor != null)
                 _leftRelativePtVal = cur.LeftNeighbor.MiddlePt_Val;
 
-              
-            if (!cur.TopEdgeMiddlePt_Val.IsGenerated)
-            {
-                if (_topRelativePtVal != null)
-                    cur.TopEdgeMiddlePt_Val.Height =
-                        (cur.LeftTopPoint_Val.Height + _topRelativePtVal.Height + 
-                        cur.RightTopPoint_Val.Height + cur.MiddlePt_Val.Height) / 4.0f;
-                else
-                    cur.TopEdgeMiddlePt_Val.Height =
-                        (cur.LeftTopPoint_Val.Height + cur.RightTopPoint_Val.Height) / 2.0f;
-            }
-                
 
-            if (!cur.RightEdgeMiddlePt_Val.IsGenerated)
-            {
-                if (_rightRelativePtVal != null)
-                    cur.RightEdgeMiddlePt_Val.Height =
-                        (cur.RightTopPoint_Val.Height + _rightRelativePtVal.Height +
-                        cur.RightDownPoint_Val.Height + cur.MiddlePt_Val.Height) / 4.0f;
-                else
-                    cur.RightEdgeMiddlePt_Val.Height =
-                        (cur.RightTopPoint_Val.Height + cur.RightDownPoint_Val.Height) / 2.0f;
-            }
+            if (_topRelativePtVal != null)
+                cur.TopEdgeMiddlePt_Val.Height =
+                    (cur.LeftTopPoint_Val.Height + _topRelativePtVal.Height +
+                    cur.RightTopPoint_Val.Height + cur.MiddlePt_Val.Height) / 4.0f;
+            else
+                cur.TopEdgeMiddlePt_Val.Height =
+                    (cur.LeftTopPoint_Val.Height + cur.RightTopPoint_Val.Height) / 2.0f;
 
-            if (!cur.DownEdgeMiddlePt_Val.IsGenerated)
-            {
-                if (_downRelativePtVal != null)
-                    cur.DownEdgeMiddlePt_Val.Height =
-                        (cur.MiddlePt_Val.Height + cur.RightDownPoint_Val.Height +
-                        _downRelativePtVal.Height + cur.LeftDownPoint_Val.Height) / 4.0f;
-                else
-                    cur.DownEdgeMiddlePt_Val.Height =
-                        (cur.LeftDownPoint_Val.Height + cur.RightDownPoint_Val.Height) / 2.0f;
-            }
-            
-            if (!cur.LeftEdgeMiddlePt_Val.IsGenerated)
-            {
-                if (_leftRelativePtVal != null)
-                    cur.LeftEdgeMiddlePt_Val.Height =
-                        (cur.LeftTopPoint_Val.Height + cur.MiddlePt_Val.Height +
-                        cur.LeftDownPoint_Val.Height + _leftRelativePtVal.Height) / 4.0f;
-                else
-                    cur.LeftEdgeMiddlePt_Val.Height =
-                        (cur.LeftTopPoint_Val.Height + cur.LeftDownPoint_Val.Height) / 2.0f;
-            }
+
+            if (_rightRelativePtVal != null)
+                cur.RightEdgeMiddlePt_Val.Height =
+                    (cur.RightTopPoint_Val.Height + _rightRelativePtVal.Height +
+                    cur.RightDownPoint_Val.Height + cur.MiddlePt_Val.Height) / 4.0f;
+            else
+                cur.RightEdgeMiddlePt_Val.Height =
+                    (cur.RightTopPoint_Val.Height + cur.RightDownPoint_Val.Height) / 2.0f;
+
+            if (_downRelativePtVal != null)
+                cur.DownEdgeMiddlePt_Val.Height =
+                    (cur.MiddlePt_Val.Height + cur.RightDownPoint_Val.Height +
+                    _downRelativePtVal.Height + cur.LeftDownPoint_Val.Height) / 4.0f;
+            else
+                cur.DownEdgeMiddlePt_Val.Height =
+                    (cur.LeftDownPoint_Val.Height + cur.RightDownPoint_Val.Height) / 2.0f;
+
+            if (_leftRelativePtVal != null)
+                cur.LeftEdgeMiddlePt_Val.Height =
+                    (cur.LeftTopPoint_Val.Height + cur.MiddlePt_Val.Height +
+                    cur.LeftDownPoint_Val.Height + _leftRelativePtVal.Height) / 4.0f;
+            else
+                cur.LeftEdgeMiddlePt_Val.Height =
+                    (cur.LeftTopPoint_Val.Height + cur.LeftDownPoint_Val.Height) / 2.0f;
         }
 
         Queue<Area> curLayer = new Queue<Area>();
 
-
         void Pogr(int curDepth, int depth)
         {
+            if (curDepth >= depth)
+                return;
             Queue<Area> nextLayer = new Queue<Area>();
             // Square current layer and collect areas to nextLayer
             foreach (Area z in curLayer)
@@ -549,7 +535,7 @@ namespace Map.Generator.Algorithms
                     Square(z, (maxHeight - minHeight) / (float)GetPow2(curDepth + 1));
 
                 // If it is max depth, ignore childs
-                if (curDepth + 1 == _maxDepth)
+                if (curDepth + 1 >= _maxDepth)
                     continue;
                 nextLayer.Enqueue(z.LeftTopChild);
                 nextLayer.Enqueue(z.RightTopChild);
@@ -568,44 +554,45 @@ namespace Map.Generator.Algorithms
                 Pogr(curDepth + 1, depth);
         }
 
-        public void ExtendResolution(Area map, byte depth)
+        public void ExtendResolution(Area area, byte depth)
         {
             if (depth > _maxDepth)
                 throw new ArgumentException("depth > _maxDepth");
-            map.CreateAreasAround(depth);
-            for (int i = 1; i <= depth; i++)
+
+            // Get already generated depth (if exists)
+            int curDepth = 0;
+            if (depths.ContainsKey(area))
+                curDepth = depths[area];
+
+            if (depth > curDepth)
             {
-                Area[,] areas = map.GetAreasAround(depth - i);
-                foreach (Area t in areas)
+                // Get founded before layer (if exists)
+                if (cash.ContainsKey(area))
+                    curLayer = cash[area];
+                else
+                    curLayer = new Queue<Area>(new Area[] { area });
+
+                Pogr(curDepth, depth);
+
+                if (depth == _maxDepth)
+                    // We extend this area to maxDepth
+                    // We can remove this area from cash, 
+                    // because we won't extend this area in future
+                    cash.Remove(area);
+                else
                 {
-                    if (cash.ContainsKey(t))
-                        curLayer = cash[t]; // Get founded before layer
+                    if (cash.ContainsKey(area))
+                        cash[area] = curLayer;
                     else
-                        curLayer = new Queue<Area>(new Area[] { t } );
-
-                    int curDepth = 0;
-                    if (depths.ContainsKey(t))
-                        curDepth = depths[t];
-
-                    Pogr(curDepth, i);
-
-                    if (i == _maxDepth)
-                        cash.Remove(t); // We extend this area to maxDepth
-                    else
-                    {
-                        if (cash.ContainsKey(t))
-                            cash[t] = curLayer;
-                        else
-                            cash.Add(t, curLayer);
-                    }
-
-                    if (depths.ContainsKey(t))
-                        depths[t] = i;
-                    else
-                        depths.Add(t, i);
+                        cash.Add(area, curLayer);
                 }
+
+                // Save generated depth
+                if (depths.ContainsKey(area))
+                    depths[area] = depth;
+                else
+                    depths.Add(area, depth);
             }
         }
-
     }
 }

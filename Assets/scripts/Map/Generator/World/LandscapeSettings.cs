@@ -27,19 +27,14 @@ namespace Map.Generator.World
         public ChunkSize chunkSize = ChunkSize.Size32x32;
 
         public Texture2D baseTexture;
+        public Material baseMaterial;
 
         /// <summary>
         /// Max height of terrain
         /// </summary>
         public float height = 500;
 
-        public int LowQualityWidth = 5;
-        public byte LowQualityDepth = 2;
-
-        public int MediumQualityWidth = 4;
-        public byte MediumQualityDepth = 4;
-
-        public int HightQualityWidth = 3;
+        public int HightQualityRadius = 1;
         public byte HightQualityDepth = 8;
     }
 }

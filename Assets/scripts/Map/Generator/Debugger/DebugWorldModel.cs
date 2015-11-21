@@ -5,6 +5,7 @@ using System.Text;
 using UnityEngine;
 using Map.Generator.MapModels;
 using Map.Generator.World;
+using Map.Generator.MapView;
 
 namespace Map.Generator.Debugger
 {
@@ -20,13 +21,13 @@ namespace Map.Generator.Debugger
 
         public int neighborsRadius = -1;
 
-        void OnEnable()
+        void Start()
         {
             land = GetComponent<Landscape>();
             sett = GetComponent<LandscapeSettings>();
         }
 
-        void DrawArea(Area area, int depth, Vector2 leftTop)
+        void DrawArea(Area area, int depth, Vector3 leftTop)
         {
             int resolution = (int)Math.Pow(2, depth);
             float edgeLentgh = (int)sett.chunkSize / (float)resolution;
@@ -37,11 +38,11 @@ namespace Map.Generator.Debugger
                 for (int j = 0; j < map.GetLength(1) - 1; j++)
                 {
                     Gizmos.DrawLine(
-                        new Vector3(leftTop.x + j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, leftTop.y - i * edgeLentgh),
-                        new Vector3(leftTop.x + (j + 1) * edgeLentgh, map[i, j + 1].Height * sett.height + verticalGridOffset, leftTop.y - i * edgeLentgh));
+                        leftTop + new Vector3(j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, -i * edgeLentgh),
+                        leftTop + new Vector3((j + 1) * edgeLentgh, map[i, j + 1].Height * sett.height + verticalGridOffset, -i * edgeLentgh));
                     Gizmos.DrawLine(
-                        new Vector3(leftTop.x + j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, leftTop.y - i * edgeLentgh),
-                        new Vector3(leftTop.x + j * edgeLentgh, map[i + 1, j].Height * sett.height + verticalGridOffset, leftTop.y - (i + 1) * edgeLentgh));
+                        leftTop + new Vector3(j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, -i * edgeLentgh),
+                        leftTop + new Vector3(j * edgeLentgh, map[i + 1, j].Height * sett.height + verticalGridOffset, -(i + 1) * edgeLentgh));
                 }
         }
 
@@ -53,7 +54,10 @@ namespace Map.Generator.Debugger
                     land = GetComponent<Landscape>();
                 if (sett == null)
                     sett = GetComponent<LandscapeSettings>();
+
                 if (land.CurArea == null)
+                    return;
+                if (land.mapViewer.GetViewInfo(land.CurArea) == null)
                     return;
 
                 int maxDepth = land.CurArea.CalcDepth();
@@ -76,8 +80,8 @@ namespace Map.Generator.Debugger
                 for (int i = 0; i < z.GetLength(0); i++)
                     for (int j = 0; j < z.GetLength(1); j++)
                     {
-                        Vector2 leftTop = new Vector2(land.CurChunkModel.transform.position.x + (j - neighborsRadius) * (int) sett.chunkSize, 
-                            land.CurChunkModel.transform.position.z + (neighborsRadius - i + 1) * (int)sett.chunkSize);
+                        Vector3 leftTop = land.mapViewer.GetViewInfo(land.CurArea).LeftDownPos +
+                            new Vector3((j - neighborsRadius) * (int)sett.chunkSize, 0, (neighborsRadius - i + 1) * (int)sett.chunkSize);
                         DrawArea(z[i, j], z[i, j].CalcDepth(), leftTop);
                     }
             }
