@@ -34,7 +34,6 @@ namespace Map.Generator.World
         /// </summary>
         public float height = 500;
 
-        public int HightQualityRadius = 1;
-        public byte HightQualityDepth = 8;
+        public byte[] depths = new byte[7];
     }
 }

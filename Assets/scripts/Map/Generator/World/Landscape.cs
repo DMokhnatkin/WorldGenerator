@@ -4,6 +4,7 @@ using UnityEngine;
 using Map.Generator.MapModels;
 using Map.Generator.Algorithms;
 using Map.Generator.MapView;
+using System.Linq;
 
 namespace Map.Generator.World
 {
@@ -46,23 +47,22 @@ namespace Map.Generator.World
             generator = new Generator(settings);
             CurArea = mapModel.Root;
 
-            generator.Generate(CurArea, settings.HightQualityDepth, settings.HightQualityRadius);
+            generator.GenerateAround(CurArea, settings);
             mapViewer.RenderStaticChunk(CurArea,
                 new Vector3(player.transform.position.x, 0, player.transform.position.z) +
                 new Vector3(-(int)settings.chunkSize / 2.0f, 0, -(int)settings.chunkSize / 2.0f));
-
-            //mapViewer.RenderDynamicChunk(CurArea.LeftNeighbor, GetPosFromNeighbors(CurArea.LeftNeighbor).Value);
             RenderAround();
         }
 
         void RenderAround()
         {
-            Area[,] z = CurArea.GetAreasAround(settings.HightQualityDepth + settings.HightQualityRadius);
+            int r = settings.depths.Sum((x) => { return x; });
+            Area[,] z = CurArea.GetAreasAround(r);
             for (int i = 0; i < z.GetLength(0); i++)
                 for (int j = 0; j < z.GetLength(1); j++)
                 {
-                    if (Math.Abs(i - z.GetLength(0) / 2) > settings.HightQualityRadius ||
-                        Math.Abs(j - z.GetLength(1) / 2) > settings.HightQualityRadius)
+                    if (Math.Abs(i - z.GetLength(0) / 2) > settings.depths[settings.depths.Length - 1] ||
+                        Math.Abs(j - z.GetLength(1) / 2) > settings.depths[settings.depths.Length - 1])
                     {
                         mapViewer.RenderDynamicChunk(z[i, j],
                             mapViewer.GetViewInfo(CurArea).LeftDownPos +
@@ -150,9 +150,9 @@ namespace Map.Generator.World
                     }
                 case 1:
                     {
-                        generator.Generate(CurArea.GetOrCreateTopNeighbor(), settings.HightQualityDepth, settings.HightQualityRadius + 1);
-                        CurArea = CurArea.TopNeighbor;
-                        mapViewer.RenderStaticChunk(CurArea, GetPosFromNeighbors(CurArea).Value);
+                        //generator.Generate(CurArea.GetOrCreateTopNeighbor(), settings.HightQualityDepth, settings.HightQualityRadius + 1);
+                        //CurArea = CurArea.TopNeighbor;
+                        //mapViewer.RenderStaticChunk(CurArea, GetPosFromNeighbors(CurArea).Value);
                         break;
                     }
                 case 2:
@@ -161,16 +161,16 @@ namespace Map.Generator.World
                     }
                 case 3:
                     {
-                        generator.Generate(CurArea.GetOrCreateLeftNeighbor(), settings.HightQualityDepth, settings.HightQualityRadius + 1);
-                        CurArea = CurArea.LeftNeighbor;
-                        mapViewer.RenderStaticChunk(CurArea, GetPosFromNeighbors(CurArea).Value);
+                        //generator.Generate(CurArea.GetOrCreateLeftNeighbor(), settings.HightQualityDepth, settings.HightQualityRadius + 1);
+                        //CurArea = CurArea.LeftNeighbor;
+                        //mapViewer.RenderStaticChunk(CurArea, GetPosFromNeighbors(CurArea).Value);
                         break;
                     }
                 case 5:
                     {
-                        generator.Generate(CurArea.GetOrCreateRightNeighbor(), settings.HightQualityDepth, settings.HightQualityRadius + 1);
-                        CurArea = CurArea.RightNeighbor;
-                        mapViewer.RenderStaticChunk(CurArea, GetPosFromNeighbors(CurArea).Value);
+                        //generator.Generate(CurArea.GetOrCreateRightNeighbor(), settings.HightQualityDepth, settings.HightQualityRadius + 1);
+                        //CurArea = CurArea.RightNeighbor;
+                        //mapViewer.RenderStaticChunk(CurArea, GetPosFromNeighbors(CurArea).Value);
                         break;
                     }
                 case 6:
@@ -179,9 +179,9 @@ namespace Map.Generator.World
                     }
                 case 7:
                     {
-                        generator.Generate(CurArea.GetOrCreateDownNeighbor(), settings.HightQualityDepth, settings.HightQualityRadius);
-                        CurArea = CurArea.DownNeighbor;
-                        mapViewer.RenderStaticChunk(CurArea, GetPosFromNeighbors(CurArea).Value);
+                        //generator.Generate(CurArea.GetOrCreateDownNeighbor(), settings.HightQualityDepth, settings.HightQualityRadius);
+                        //CurArea = CurArea.DownNeighbor;
+                        //mapViewer.RenderStaticChunk(CurArea, GetPosFromNeighbors(CurArea).Value);
                         break;
                     }
                 case 8:

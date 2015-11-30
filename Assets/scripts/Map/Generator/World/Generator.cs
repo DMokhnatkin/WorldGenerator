@@ -4,6 +4,7 @@ using Map.Generator.MapModels;
 using Map.Generator.Algorithms;
 using UnityEngine;
 using System.Collections;
+using System.Linq;
 
 namespace Map.Generator.World
 {
@@ -19,7 +20,7 @@ namespace Map.Generator.World
 
         public Generator(LandscapeSettings sett)
         {
-            sq = new DiamondSquare(sett.HightQualityDepth);
+            sq = new DiamondSquare((byte)(sett.depths.Length - 1));
         }
 
         /// <summary>
@@ -36,6 +37,21 @@ namespace Map.Generator.World
                 {
                     sq.ExtendResolution(t, (byte)i);
                 }
+            }
+        }
+
+        public void GenerateAround(Area area, LandscapeSettings sett)
+        {
+            int r = sett.depths.Sum((x) => { return x; });
+            area.CreateAreasAround(r);
+            for (int i = 1; i < sett.depths.Length; i++)
+            {
+                Area[,] areas = area.GetAreasAround(r);
+                foreach (Area t in areas)
+                {
+                    sq.ExtendResolution(t, (byte)i);
+                }
+                r -= sett.depths[i];
             }
         }
     }
