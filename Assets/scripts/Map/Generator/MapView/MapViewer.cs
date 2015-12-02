@@ -41,15 +41,46 @@ namespace Map.Generator.MapView
         /// </summary>
         public void RenderDynamicChunk(Area area, Vector3 leftDownPos)
         {
+            GameObject obj = null;
+            MeshFilter meshFilter;
+            MeshRenderer render;
+
+            if (chunksInfo.ContainsKey(area))
+            {
+                if (chunksInfo[area].IsStatic)
+                {
+                    RenderStaticChunk(area, leftDownPos);
+                    return;
+                }
+                else
+                {
+                    obj = chunksInfo[area].ChunkObject;
+                }
+            }
+
             if (!chunksInfo.ContainsKey(area))
                 chunksInfo.Add(area, new ChunkViewInfo());
             chunksInfo[area].Depth = area.CalcDepth();
             chunksInfo[area].LeftDownPos = leftDownPos;
 
-            GameObject obj = new GameObject();
-            MeshFilter meshFilter = obj.AddComponent<MeshFilter>();
+            if (obj == null)
+            {
+                obj = new GameObject();
+                obj.isStatic = true;
+                meshFilter = obj.AddComponent<MeshFilter>();
+                render = obj.AddComponent<MeshRenderer>();
+                render.receiveShadows = false;
+                render.useLightProbes = false;
+                render.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+            }
+            else
+            {
+                meshFilter = obj.GetComponent<MeshFilter>();
+                render = obj.GetComponent<MeshRenderer>();
+            }
             Mesh mesh = meshFilter.mesh;
             mesh.Clear();
+            mesh.MarkDynamic();
 
             List<Vector3> vert = new List<Vector3>();
             List<int> triangles = new List<int>();
@@ -87,7 +118,7 @@ namespace Map.Generator.MapView
             mesh.Optimize();
 
             obj.transform.position = leftDownPos;
-            MeshRenderer render = obj.AddComponent<MeshRenderer>();
+            
             render.material = _settings.baseMaterial;
             chunksInfo[area].ChunkObject = obj;
         }
@@ -97,6 +128,18 @@ namespace Map.Generator.MapView
         /// </summary>
         public void RenderStaticChunk(Area area, Vector3 leftDownPos)
         {
+            if (chunksInfo.ContainsKey(area))
+            {
+                if (chunksInfo[area].IsStatic)
+                {
+                    chunksInfo[area].ChunkObject.SetActive(true);
+                    return;
+                }
+                else
+                {
+                    GameObject.Destroy(chunksInfo[area].ChunkObject);
+                }
+            }
             if (!chunksInfo.ContainsKey(area))
                 chunksInfo.Add(area, new ChunkViewInfo());
             chunksInfo[area].Depth = area.CalcDepth();
@@ -119,6 +162,7 @@ namespace Map.Generator.MapView
             terr.transform.position = leftDownPos;
 
             chunksInfo[area].ChunkObject = terr;
+            chunksInfo[area].IsStatic = true;
         }
     }
 }
