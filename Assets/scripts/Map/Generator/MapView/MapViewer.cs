@@ -20,7 +20,7 @@ namespace Map.Generator.MapView
 
         private float[,] ToHeightMap(Area chunkArea)
         {
-            MapVertex[,] map = chunkArea.ToArray();
+            MapPoint[,] map = chunkArea.ToArray();
             float[,] heights = new float[map.GetLength(0), map.GetLength(1)];
             for (int i = 0; i < map.GetLength(0); i++)
                 for (int j = 0; j < map.GetLength(1); j++)
@@ -45,22 +45,32 @@ namespace Map.Generator.MapView
             MeshFilter meshFilter;
             MeshRenderer render;
 
+            byte depth = area.CalcDepth();
+
             if (chunksInfo.ContainsKey(area))
             {
                 if (chunksInfo[area].IsStatic)
                 {
+                    // This chunk was rendered as static before
+                    // We can't change models of static chunks, so just render it
                     RenderStaticChunk(area, leftDownPos);
                     return;
                 }
                 else
                 {
                     obj = chunksInfo[area].ChunkObject;
+                    if (chunksInfo[area].Depth >= depth)
+                    {
+                        // Chunk was rendered before, just show it
+                        if (!obj.activeSelf)
+                            obj.SetActive(true);
+                    }
                 }
             }
 
             if (!chunksInfo.ContainsKey(area))
                 chunksInfo.Add(area, new ChunkViewInfo());
-            chunksInfo[area].Depth = area.CalcDepth();
+            chunksInfo[area].Depth = depth;
             chunksInfo[area].LeftDownPos = leftDownPos;
 
             if (obj == null)
@@ -80,13 +90,13 @@ namespace Map.Generator.MapView
             }
             Mesh mesh = meshFilter.mesh;
             mesh.Clear();
-            mesh.MarkDynamic();
+            //mesh.MarkDynamic();
 
             List<Vector3> vert = new List<Vector3>();
             List<int> triangles = new List<int>();
             List<Vector2> uv = new List<Vector2>();
 
-            MapVertex[,] z = area.ToArray();
+            MapPoint[,] z = area.ToArray();
             float edgeLength = (int)_settings.chunkSize / ((float)z.GetLength(0) - 1);
             for (int i = 0; i < z.GetLength(0); i++)
                 for (int j = 0; j < z.GetLength(1); j++)
@@ -132,6 +142,7 @@ namespace Map.Generator.MapView
             {
                 if (chunksInfo[area].IsStatic)
                 {
+                    // This chunk was rendered before, so it is in memory
                     chunksInfo[area].ChunkObject.SetActive(true);
                     return;
                 }

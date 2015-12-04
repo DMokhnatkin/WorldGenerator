@@ -42,14 +42,20 @@ namespace Map.Generator.World
 
         public void GenerateAround(Area area, LandscapeSettings sett)
         {
-            int r = sett.depths.Sum((x) => { return x; });
-            area.CreateAreasAround(r);
+            int maxR = sett.depths.Sum((x) => { return x; });
+            int r = maxR;
+            area.CreateAreasAround(maxR);
+            Area[,] areas = area.GetAreasAround(maxR);
+
             for (int i = 1; i < sett.depths.Length; i++)
             {
-                Area[,] areas = area.GetAreasAround(r);
-                foreach (Area t in areas)
+                // Get areas with cur radius
+                for (int y = maxR - r; y < maxR + r; y++)
                 {
-                    sq.ExtendResolution(t, (byte)i);
+                    for (int z = maxR - r; z < maxR + r; z++)
+                    {
+                        sq.ExtendResolution(areas[y, z], (byte)i);
+                    }
                 }
                 r -= sett.depths[i];
             }

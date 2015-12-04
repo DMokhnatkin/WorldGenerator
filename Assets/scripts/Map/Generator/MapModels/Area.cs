@@ -31,28 +31,28 @@ namespace Map.Generator.MapModels
         }
 
         internal int LeftTopPoint_Id { get; set; }
-        public MapVertex LeftTopPoint_Val
+        public MapPoint LeftTopPoint_Val
         {
             get { return Collection.points[LeftTopPoint_Id]; }
             set { Collection.points[LeftTopPoint_Id] = value; }
         }
 
         internal int RightTopPoint_Id { get; set; }
-        public MapVertex RightTopPoint_Val
+        public MapPoint RightTopPoint_Val
         {
             get { return Collection.points[RightTopPoint_Id]; }
             set { Collection.points[RightTopPoint_Id] = value; }
         }
 
         internal int LeftDownPoint_Id { get; set; }
-        public MapVertex LeftDownPoint_Val
+        public MapPoint LeftDownPoint_Val
         {
             get { return Collection.points[LeftDownPoint_Id]; }
             set { Collection.points[LeftDownPoint_Id] = value; }
         }
 
         internal int RightDownPoint_Id { get; set; }
-        public MapVertex RightDownPoint_Val
+        public MapPoint RightDownPoint_Val
         {
             get { return Collection.points[RightDownPoint_Id]; }
             set { Collection.points[RightDownPoint_Id] = value; }
@@ -67,7 +67,7 @@ namespace Map.Generator.MapModels
                 return LeftTopChild.RightTopPoint_Id;
             }
         }
-        public MapVertex TopEdgeMiddlePt_Val
+        public MapPoint TopEdgeMiddlePt_Val
         {
             get { return Collection.points[TopEdgeMiddlePt_Id]; }
             set { Collection.points[TopEdgeMiddlePt_Id] = value; }
@@ -82,7 +82,7 @@ namespace Map.Generator.MapModels
                 return RightTopChild.RightDownPoint_Id;
             }
         }
-        public MapVertex RightEdgeMiddlePt_Val
+        public MapPoint RightEdgeMiddlePt_Val
         {
             get { return Collection.points[RightEdgeMiddlePt_Id]; }
             set { Collection.points[RightEdgeMiddlePt_Id] = value; }
@@ -97,7 +97,7 @@ namespace Map.Generator.MapModels
                 return RightDownChild.LeftDownPoint_Id;
             }
         }
-        public MapVertex DownEdgeMiddlePt_Val
+        public MapPoint DownEdgeMiddlePt_Val
         {
             get { return Collection.points[DownEdgeMiddlePt_Id]; }
             set { Collection.points[DownEdgeMiddlePt_Id] = value; }
@@ -112,7 +112,7 @@ namespace Map.Generator.MapModels
                 return LeftTopChild.LeftDownPoint_Id;
             }
         }
-        public MapVertex LeftEdgeMiddlePt_Val
+        public MapPoint LeftEdgeMiddlePt_Val
         {
             get { return Collection.points[LeftEdgeMiddlePt_Id]; }
             set { Collection.points[LeftEdgeMiddlePt_Id] = value; }
@@ -133,7 +133,7 @@ namespace Map.Generator.MapModels
                 return -1;
             }
         }
-        public MapVertex MiddlePt_Val
+        public MapPoint MiddlePt_Val
         {
             get
             {
@@ -240,21 +240,21 @@ namespace Map.Generator.MapModels
 
             LeftTopChild.LeftTopPoint_Id = this.LeftTopPoint_Id;
 
-            // Create points which we didn'MapVertex get from neighbors
+            // Create points which we didn't get from neighbors
             if (_rightTopPtId != -1)
                 LeftTopChild.RightTopPoint_Id = _rightTopPtId;
             else
-                LeftTopChild.RightTopPoint_Id = Collection.points.Add(new MapVertex());
+                LeftTopChild.RightTopPoint_Id = Collection.points.Add(new MapPoint());
 
             if (_leftDownPtId != -1)
                 LeftTopChild.LeftDownPoint_Id = _leftDownPtId;
             else
-                LeftTopChild.LeftDownPoint_Id = Collection.points.Add(new MapVertex());
+                LeftTopChild.LeftDownPoint_Id = Collection.points.Add(new MapPoint());
 
             if (_rightDownPtId != -1)
                 LeftTopChild.RightDownPoint_Id = _rightDownPtId;
             else
-                LeftTopChild.RightDownPoint_Id = Collection.points.Add(new MapVertex());
+                LeftTopChild.RightDownPoint_Id = Collection.points.Add(new MapPoint());
         }
 
         public void CreateRightTopChild()
@@ -309,21 +309,21 @@ namespace Map.Generator.MapModels
 
             RightTopChild.RightTopPoint_Id = this.RightTopPoint_Id;
 
-            // Create points which we didn'MapVertex get from neighbors
+            // Create points which we didn'MapPoint get from neighbors
             if (_leftTopPtId != -1)
                 RightTopChild.LeftTopPoint_Id = _leftTopPtId;
             else
-                RightTopChild.LeftTopPoint_Id = Collection.points.Add(new MapVertex());
+                RightTopChild.LeftTopPoint_Id = Collection.points.Add(new MapPoint());
 
             if (_leftDownPtId != -1)
                 RightTopChild.LeftDownPoint_Id = _leftDownPtId;
             else
-                RightTopChild.LeftDownPoint_Id = Collection.points.Add(new MapVertex());
+                RightTopChild.LeftDownPoint_Id = Collection.points.Add(new MapPoint());
 
             if (_rightDownPtId != -1)
                 RightTopChild.RightDownPoint_Id = _rightDownPtId;
             else
-                RightTopChild.RightDownPoint_Id = Collection.points.Add(new MapVertex());
+                RightTopChild.RightDownPoint_Id = Collection.points.Add(new MapPoint());
         }
 
         public void CreateLeftDownChild()
@@ -364,7 +364,7 @@ namespace Map.Generator.MapModels
                 if (DownNeighbor.LeftTopChild != null)
                 {
                     if (_rightDownPtId == -1)
-                        _rightDownPtId = DownNeighbor.LeftTopChild.RightDownPoint_Id;
+                        _rightDownPtId = DownNeighbor.LeftTopChild.RightTopPoint_Id;
                 }
             }
             if (LeftNeighbor != null)
@@ -378,21 +378,21 @@ namespace Map.Generator.MapModels
 
             LeftDownChild.LeftDownPoint_Id = this.LeftDownPoint_Id;
 
-            // Create points which we didn'MapVertex get from neighbors
+            // Create points which we didn'MapPoint get from neighbors
             if (_leftTopPtId != -1)
                 LeftDownChild.LeftTopPoint_Id = _leftTopPtId;
             else
-                LeftDownChild.LeftTopPoint_Id = Collection.points.Add(new MapVertex());
+                LeftDownChild.LeftTopPoint_Id = Collection.points.Add(new MapPoint());
 
             if (_rightTopPtId != -1)
                 LeftDownChild.RightTopPoint_Id = _rightTopPtId;
             else
-                LeftDownChild.RightTopPoint_Id = Collection.points.Add(new MapVertex());
+                LeftDownChild.RightTopPoint_Id = Collection.points.Add(new MapPoint());
 
             if (_rightDownPtId != -1)
                 LeftDownChild.RightDownPoint_Id = _rightDownPtId;
             else
-                LeftDownChild.RightDownPoint_Id = Collection.points.Add(new MapVertex());
+                LeftDownChild.RightDownPoint_Id = Collection.points.Add(new MapPoint());
         }
 
         public void CreateRightDownChild()
@@ -447,21 +447,21 @@ namespace Map.Generator.MapModels
 
             RightDownChild.RightDownPoint_Id = this.RightDownPoint_Id;
 
-            // Create points which we didn'MapVertex get from neighbors
+            // Create points which we didn'MapPoint get from neighbors
             if (_leftTopPtId != -1)
                 RightDownChild.LeftTopPoint_Id = _leftTopPtId;
             else
-                RightDownChild.LeftTopPoint_Id = Collection.points.Add(new MapVertex());
+                RightDownChild.LeftTopPoint_Id = Collection.points.Add(new MapPoint());
 
             if (_rightTopPtId != -1)
                 RightDownChild.RightTopPoint_Id = _rightTopPtId;
             else
-                RightDownChild.RightTopPoint_Id = Collection.points.Add(new MapVertex());
+                RightDownChild.RightTopPoint_Id = Collection.points.Add(new MapPoint());
 
             if (_leftDownPtId != -1)
                 RightDownChild.LeftDownPoint_Id = _leftDownPtId;
             else
-                RightDownChild.LeftDownPoint_Id = Collection.points.Add(new MapVertex());
+                RightDownChild.LeftDownPoint_Id = Collection.points.Add(new MapPoint());
         }
 
         /// <summary>

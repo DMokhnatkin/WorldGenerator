@@ -32,18 +32,34 @@ namespace Map.Generator.Debugger
             int resolution = (int)Math.Pow(2, depth);
             float edgeLentgh = (int)sett.chunkSize / (float)resolution;
 
-            MapVertex[,] map = area.ToArray(depth);
+            MapPoint[,] map = area.ToArray(depth);
 
             for (int i = 0; i < map.GetLength(0) - 1; i++)
                 for (int j = 0; j < map.GetLength(1) - 1; j++)
                 {
+                    // Horizontal
                     Gizmos.DrawLine(
                         leftTop + new Vector3(j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, -i * edgeLentgh),
                         leftTop + new Vector3((j + 1) * edgeLentgh, map[i, j + 1].Height * sett.height + verticalGridOffset, -i * edgeLentgh));
+                    // Vertical
                     Gizmos.DrawLine(
                         leftTop + new Vector3(j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, -i * edgeLentgh),
                         leftTop + new Vector3(j * edgeLentgh, map[i + 1, j].Height * sett.height + verticalGridOffset, -(i + 1) * edgeLentgh));
                 }
+            // We didn't draw down edge of area
+            for (int j = 0; j < map.GetLength(1) - 1; j++)
+            {
+                Gizmos.DrawLine(
+                        leftTop + new Vector3(j * edgeLentgh, map[map.GetLength(0) - 1, j].Height * sett.height + verticalGridOffset, -(map.GetLength(0) - 1) * edgeLentgh),
+                        leftTop + new Vector3((j + 1) * edgeLentgh, map[map.GetLength(0) - 1, j + 1].Height * sett.height + verticalGridOffset, -(map.GetLength(0) - 1) * edgeLentgh));
+            }
+            // We didn't draw right edge of area
+            for (int i = 0; i < map.GetLength(0) - 1; i++)
+            {
+                Gizmos.DrawLine(
+                        leftTop + new Vector3((map.GetLength(1) - 1) * edgeLentgh, map[i, map.GetLength(1) - 1].Height * sett.height + verticalGridOffset, -i * edgeLentgh),
+                        leftTop + new Vector3((map.GetLength(1) - 1) * edgeLentgh, map[i + 1, map.GetLength(1) - 1].Height * sett.height + verticalGridOffset, -(i + 1) * edgeLentgh));
+            }
         }
 
         void OnDrawGizmos()

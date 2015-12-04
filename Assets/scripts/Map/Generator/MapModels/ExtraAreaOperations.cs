@@ -25,7 +25,7 @@ namespace Map.Generator.MapModels
             return depth;
         }
 
-        static void FillArrayFromLeftTopCorner(MapVertex[,] arr, Area cur, int i0, int j0, int i1, int j1, int depth, int maxDepth)
+        static void FillArrayFromLeftTopCorner(MapPoint[,] arr, Area cur, int i0, int j0, int i1, int j1, int depth, int maxDepth)
         {
             if (!cur.IsSubDivided || depth == maxDepth)
             {
@@ -44,7 +44,7 @@ namespace Map.Generator.MapModels
         /// <summary>
         /// Build array from the deepest layer of area
         /// </summary>
-        public static MapVertex[,] ToArray(this Area area)
+        public static MapPoint[,] ToArray(this Area area)
         {
             int depth = area.CalcDepth();
             return ToArray(area, depth);
@@ -53,11 +53,11 @@ namespace Map.Generator.MapModels
         /// <summary>
         /// Build array from depthLayer
         /// </summary>
-        public static MapVertex[,] ToArray(this Area area, int depthLayer)
+        public static MapPoint[,] ToArray(this Area area, int depthLayer)
         {
             // Calculate resolution of area
             int resolution = (int)Math.Pow(2, depthLayer);
-            MapVertex[,] res = new MapVertex[resolution + 1, resolution + 1];
+            MapPoint[,] res = new MapPoint[resolution + 1, resolution + 1];
             FillArrayFromLeftTopCorner(res, area, 0, 0, resolution, resolution, 0, depthLayer);
             return res;
         }

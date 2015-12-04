@@ -7,13 +7,13 @@ namespace Map.Generator.MapModels
 {
     public class AreaTree
     {
-        internal FreeIdCollection<MapVertex> points;
+        internal FreeIdCollection<MapPoint> points;
 
         Area _root;
 
         public AreaTree()
         {
-            points = new FreeIdCollection<MapVertex>();
+            points = new FreeIdCollection<MapPoint>();
             UpRoot();
         }
 
@@ -182,35 +182,35 @@ namespace Map.Generator.MapModels
                         {
                             _newRoot.LeftTopChild = _root;
                             _newRoot.LeftTopPoint_Id = _root.LeftTopPoint_Id;
-                            _newRoot.RightTopPoint_Id = points.Add(new MapVertex());
-                            _newRoot.LeftDownPoint_Id = points.Add(new MapVertex());
-                            _newRoot.RightDownPoint_Id = points.Add(new MapVertex());
+                            _newRoot.RightTopPoint_Id = points.Add(new MapPoint());
+                            _newRoot.LeftDownPoint_Id = points.Add(new MapPoint());
+                            _newRoot.RightDownPoint_Id = points.Add(new MapPoint());
                             break;
                         }
                     case 1:
                         {
                             _newRoot.RightTopChild = _root;
-                            _newRoot.LeftTopPoint_Id = points.Add(new MapVertex());
+                            _newRoot.LeftTopPoint_Id = points.Add(new MapPoint());
                             _newRoot.RightTopPoint_Id = _root.RightTopPoint_Id;
-                            _newRoot.LeftDownPoint_Id = points.Add(new MapVertex());
-                            _newRoot.RightDownPoint_Id = points.Add(new MapVertex());
+                            _newRoot.LeftDownPoint_Id = points.Add(new MapPoint());
+                            _newRoot.RightDownPoint_Id = points.Add(new MapPoint());
                             break;
                         }
                     case 2:
                         {
                             _newRoot.LeftDownChild = _root;
-                            _newRoot.LeftTopPoint_Id = points.Add(new MapVertex());
-                            _newRoot.RightTopPoint_Id = points.Add(new MapVertex());
+                            _newRoot.LeftTopPoint_Id = points.Add(new MapPoint());
+                            _newRoot.RightTopPoint_Id = points.Add(new MapPoint());
                             _newRoot.LeftDownPoint_Id = _root.LeftDownPoint_Id;
-                            _newRoot.RightDownPoint_Id = points.Add(new MapVertex());
+                            _newRoot.RightDownPoint_Id = points.Add(new MapPoint());
                             break;
                         }
                     case 3:
                         {
                             _newRoot.RightDownChild = _root;
-                            _newRoot.LeftTopPoint_Id = points.Add(new MapVertex());
-                            _newRoot.RightTopPoint_Id = points.Add(new MapVertex());
-                            _newRoot.LeftDownPoint_Id = points.Add(new MapVertex());
+                            _newRoot.LeftTopPoint_Id = points.Add(new MapPoint());
+                            _newRoot.RightTopPoint_Id = points.Add(new MapPoint());
+                            _newRoot.LeftDownPoint_Id = points.Add(new MapPoint());
                             _newRoot.RightDownPoint_Id = _root.RightDownPoint_Id;
                             break;
                         }
@@ -219,10 +219,10 @@ namespace Map.Generator.MapModels
             }
             else
             {
-                _newRoot.LeftTopPoint_Id = points.Add(new MapVertex());
-                _newRoot.RightTopPoint_Id = points.Add(new MapVertex());
-                _newRoot.LeftDownPoint_Id = points.Add(new MapVertex());
-                _newRoot.RightDownPoint_Id = points.Add(new MapVertex());
+                _newRoot.LeftTopPoint_Id = points.Add(new MapPoint());
+                _newRoot.RightTopPoint_Id = points.Add(new MapPoint());
+                _newRoot.LeftDownPoint_Id = points.Add(new MapPoint());
+                _newRoot.RightDownPoint_Id = points.Add(new MapPoint());
             }
             _root = _newRoot;
         }
