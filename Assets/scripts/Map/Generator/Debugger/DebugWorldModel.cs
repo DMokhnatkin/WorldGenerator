@@ -6,6 +6,7 @@ using UnityEngine;
 using Map.Generator.MapModels;
 using Map.Generator.World;
 using Map.Generator.MapView;
+using UnityEditor;
 
 namespace Map.Generator.Debugger
 {
@@ -20,6 +21,10 @@ namespace Map.Generator.Debugger
         public int depthLayer = -1;
 
         public int neighborsRadius = -1;
+
+        public bool drawPoints = false;
+
+        public float pointRadius = 0.05f;
 
         void Start()
         {
@@ -37,6 +42,12 @@ namespace Map.Generator.Debugger
             for (int i = 0; i < map.GetLength(0) - 1; i++)
                 for (int j = 0; j < map.GetLength(1) - 1; j++)
                 {
+                    if (drawPoints)
+                    {
+                        Vector3 pos =
+                            leftTop + new Vector3(j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, -i * edgeLentgh);
+                        Gizmos.DrawSphere(pos, HandleUtility.GetHandleSize(pos) * pointRadius);
+                    }
                     // Horizontal
                     Gizmos.DrawLine(
                         leftTop + new Vector3(j * edgeLentgh, map[i, j].Height * sett.height + verticalGridOffset, -i * edgeLentgh),

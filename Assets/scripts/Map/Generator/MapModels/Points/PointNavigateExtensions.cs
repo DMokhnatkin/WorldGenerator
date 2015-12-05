@@ -11,6 +11,94 @@ namespace Map.Generator.MapModels
         /// <summary>
         /// Get top neighbor for point in area depth layer in which area is
         /// </summary>
+        /// <param name="index">How much points skip</param>
+        /// <returns></returns>
+        public static MapPoint TopNeighborInLayer(this MapPoint point, Area area, int index)
+        {
+            Area curArea = area;
+            MapPoint curPt = point;
+            for (int i = 0; i < index; i++)
+            {
+                curPt = curPt.TopNeighborInLayer(curArea);
+                if (curPt == null)
+                    return null;
+                if (!curPt.IsInArea(curArea))
+                    curArea = curArea.TopNeighbor;
+                if (curArea == null)
+                    return null;
+            }
+            return curPt;
+        }
+
+        /// <summary>
+        /// Get right neighbor for point in area depth layer in which area is
+        /// </summary>
+        /// <param name="index">How much points skip</param>
+        /// <returns></returns>
+        public static MapPoint RightNeighborInLayer(this MapPoint point, Area area, int index)
+        {
+            Area curArea = area;
+            MapPoint curPt = point;
+            for (int i = 0; i < index; i++)
+            {
+                curPt = curPt.RightNeighborInLayer(curArea);
+                if (curPt == null)
+                    return null;
+                if (!curPt.IsInArea(curArea))
+                    curArea = curArea.RightNeighbor;
+                if (curArea == null)
+                    return null;
+            }
+            return curPt;
+        }
+
+        /// <summary>
+        /// Get down neighbor for point in area depth layer in which area is
+        /// </summary>
+        /// <param name="index">How much points skip</param>
+        /// <returns></returns>
+        public static MapPoint DownNeighborInLayer(this MapPoint point, Area area, int index)
+        {
+            Area curArea = area;
+            MapPoint curPt = point;
+            for (int i = 0; i < index; i++)
+            {
+                curPt = curPt.DownNeighborInLayer(curArea);
+                if (curPt == null)
+                    return null;
+                if (!curPt.IsInArea(curArea))
+                    curArea = curArea.DownNeighbor;
+                if (curArea == null)
+                    return null;
+            }
+            return curPt;
+        }
+
+        /// <summary>
+        /// Get left neighbor for point in area depth layer in which area is
+        /// </summary>
+        /// <param name="index">How much points skip</param>
+        /// <returns></returns>
+        public static MapPoint LeftNeighborInLayer(this MapPoint point, Area area, int index)
+        {
+            Area curArea = area;
+            MapPoint curPt = point;
+            for (int i = 0; i < index; i++)
+            {
+                curPt = curPt.LeftNeighborInLayer(curArea);
+                if (curPt == null)
+                    return null;
+                if (!curPt.IsInArea(curArea))
+                    curArea = curArea.LeftNeighbor;
+                if (curArea == null)
+                    return null;
+            }
+            return curPt;
+        }
+
+        /// <summary>
+        /// Get top neighbor for point in area depth layer in which area is
+        /// </summary>
         public static MapPoint TopNeighborInLayer(this MapPoint point, Area area)
         {
             if (point.IsLeftTopInArea(area))
@@ -32,6 +120,12 @@ namespace Map.Generator.MapModels
             if (point.IsRightDownInArea(area))
             {
                 return area.RightTopPoint_Val;
+            }
+            if (point.IsMiddlePt(area))
+            {
+                if (area.TopNeighbor != null)
+                    return area.TopNeighbor.MiddlePt_Val;
+                return null;
             }
             throw new ArgumentException("area doesn't contains point");
         }
@@ -59,6 +153,12 @@ namespace Map.Generator.MapModels
             {
                 if (area.RightNeighbor != null)
                     return area.RightNeighbor.RightDownPoint_Val;
+                return null;
+            }
+            if (point.IsMiddlePt(area))
+            {
+                if (area.RightNeighbor != null)
+                    return area.RightNeighbor.MiddlePt_Val;
                 return null;
             }
             throw new ArgumentException("area doesn't contains point");
@@ -89,6 +189,12 @@ namespace Map.Generator.MapModels
                     return area.DownNeighbor.RightDownPoint_Val;
                 return null;
             }
+            if (point.IsMiddlePt(area))
+            {
+                if (area.DownNeighbor != null)
+                    return area.DownNeighbor.MiddlePt_Val;
+                return null;
+            }
             throw new ArgumentException("area doesn't contains point");
         }
 
@@ -116,6 +222,12 @@ namespace Map.Generator.MapModels
             if (point.IsRightDownInArea(area))
             {
                 return area.LeftDownPoint_Val;
+            }
+            if (point.IsMiddlePt(area))
+            {
+                if (area.LeftNeighbor != null)
+                    return area.LeftNeighbor.MiddlePt_Val;
+                return null;
             }
             throw new ArgumentException("area doesn't contains point");
         }

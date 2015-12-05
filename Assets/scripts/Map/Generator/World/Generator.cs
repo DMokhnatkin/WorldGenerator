@@ -20,7 +20,7 @@ namespace Map.Generator.World
 
         public Generator(LandscapeSettings sett)
         {
-            sq = new DiamondSquare((byte)(sett.depths.Length - 1));
+            sq = new DiamondSquare((byte)(sett.depths.Length - 1), (float)sett.chunkSize);
         }
 
         /// <summary>
@@ -50,9 +50,9 @@ namespace Map.Generator.World
             for (int i = 1; i < sett.depths.Length; i++)
             {
                 // Get areas with cur radius
-                for (int y = maxR - r; y < maxR + r; y++)
+                for (int y = maxR - r; y < maxR + r + 1; y++)
                 {
-                    for (int z = maxR - r; z < maxR + r; z++)
+                    for (int z = maxR - r; z < maxR + r + 1; z++)
                     {
                         sq.ExtendResolution(areas[y, z], (byte)i);
                     }

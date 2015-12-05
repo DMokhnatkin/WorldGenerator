@@ -174,6 +174,10 @@ namespace Map.Generator.MapModels
         {
             this.Parent = parent;
             this.Collection = collection;
+            LeftTopPoint_Id = -1;
+            RightTopPoint_Id = -1;
+            LeftDownPoint_Id = -1;
+            RightDownPoint_Id = -1;
         }
 
         private void MakeVerticalNeighbors(Area top, Area down)
@@ -202,58 +206,31 @@ namespace Map.Generator.MapModels
             if (LeftDownChild != null)
                 MakeVerticalNeighbors(LeftTopChild, LeftDownChild);
 
-            int _rightTopPtId = -1;
-            int _leftDownPtId = -1;
-            int _rightDownPtId = -1;
-
-            // Try to use already created points
-            if (TopNeighbor != null)
-            {
-                if (TopNeighbor.LeftDownChild != null)
-                {
-                    if (_rightTopPtId == -1)
-                        _rightTopPtId = TopNeighbor.LeftDownChild.RightDownPoint_Id;
-                }
-            }
-            if (RightTopChild != null)
-            {
-                if (_rightTopPtId == -1)
-                    _rightTopPtId = RightTopChild.LeftTopPoint_Id;
-                if (_rightDownPtId == -1)
-                    _rightDownPtId = RightTopChild.LeftDownPoint_Id;
-            }
-            if (LeftDownChild != null)
-            {
-                if (_leftDownPtId == -1)
-                    _leftDownPtId = LeftDownChild.LeftTopPoint_Id;
-                if (_rightDownPtId == -1)
-                    _rightDownPtId = LeftDownChild.RightTopPoint_Id;
-            }
-            if (LeftNeighbor != null)
-            {
-                if (LeftNeighbor.RightTopChild != null)
-                {
-                    if (_leftDownPtId == -1)
-                        _leftDownPtId = LeftNeighbor.RightTopChild.RightDownPoint_Id;
-                }
-            }
-
             LeftTopChild.LeftTopPoint_Id = this.LeftTopPoint_Id;
+            if (LeftTopChild.TopNeighbor != null)
+                LeftTopChild.RightTopPoint_Id = LeftTopChild.TopNeighbor.RightDownPoint_Id;
+            if (LeftTopChild.RightNeighbor != null)
+            {
+                LeftTopChild.RightTopPoint_Id = LeftTopChild.RightNeighbor.LeftTopPoint_Id;
+                LeftTopChild.RightDownPoint_Id = LeftTopChild.RightNeighbor.LeftDownPoint_Id;
+            }
+            if (LeftTopChild.DownNeighbor != null)
+            {
+                LeftTopChild.RightDownPoint_Id = LeftTopChild.DownNeighbor.RightTopPoint_Id;
+            }
+            if (LeftTopChild.LeftNeighbor != null)
+            {
+                LeftTopChild.LeftDownPoint_Id = LeftTopChild.LeftNeighbor.RightDownPoint_Id;
+            }
 
             // Create points which we didn't get from neighbors
-            if (_rightTopPtId != -1)
-                LeftTopChild.RightTopPoint_Id = _rightTopPtId;
-            else
+            if (LeftTopChild.RightTopPoint_Id == -1)
                 LeftTopChild.RightTopPoint_Id = Collection.points.Add(new MapPoint());
 
-            if (_leftDownPtId != -1)
-                LeftTopChild.LeftDownPoint_Id = _leftDownPtId;
-            else
+            if (LeftTopChild.LeftDownPoint_Id == -1)
                 LeftTopChild.LeftDownPoint_Id = Collection.points.Add(new MapPoint());
 
-            if (_rightDownPtId != -1)
-                LeftTopChild.RightDownPoint_Id = _rightDownPtId;
-            else
+            if (LeftTopChild.RightDownPoint_Id == -1)
                 LeftTopChild.RightDownPoint_Id = Collection.points.Add(new MapPoint());
         }
 
@@ -271,58 +248,30 @@ namespace Map.Generator.MapModels
             if (LeftTopChild != null)
                 MakeHorizontalNeighbors(LeftTopChild, RightTopChild);
 
-            int _leftTopPtId = -1;
-            int _leftDownPtId = -1;
-            int _rightDownPtId = -1;
-
-            // Try to use already created points
-            if (TopNeighbor != null)
-            {
-                if (TopNeighbor.RightDownChild != null)
-                {
-                    if (_leftTopPtId == -1)
-                        _leftTopPtId = TopNeighbor.RightDownChild.LeftDownPoint_Id;
-                }
-            }
-            if (RightNeighbor != null)
-            {
-                if (RightNeighbor.LeftTopChild != null)
-                {
-                    if (_rightDownPtId == -1)
-                        _rightDownPtId = RightNeighbor.LeftTopChild.LeftDownPoint_Id;
-                }
-            }
-            if (RightDownChild != null)
-            {
-                if (_leftDownPtId == -1)
-                    _leftDownPtId = RightDownChild.LeftTopPoint_Id;
-                if (_rightDownPtId == -1)
-                    _rightDownPtId = RightDownChild.RightTopPoint_Id;
-            }
-            if (LeftTopChild != null)
-            {
-                if (_leftTopPtId == -1)
-                    _leftTopPtId = LeftTopChild.RightTopPoint_Id;
-                if (_leftDownPtId == -1)
-                    _leftDownPtId = LeftTopChild.RightDownPoint_Id;
-            }
-
             RightTopChild.RightTopPoint_Id = this.RightTopPoint_Id;
+            if (RightTopChild.TopNeighbor != null)
+                RightTopChild.LeftTopPoint_Id = RightTopChild.TopNeighbor.LeftDownPoint_Id;
+            if (RightTopChild.RightNeighbor != null)
+                RightTopChild.RightDownPoint_Id = RightTopChild.RightNeighbor.LeftDownPoint_Id;
+            if (RightTopChild.DownNeighbor != null)
+            {
+                RightTopChild.LeftDownPoint_Id = RightTopChild.DownNeighbor.LeftTopPoint_Id;
+                RightTopChild.RightDownPoint_Id = RightTopChild.DownNeighbor.RightTopPoint_Id;
+            }
+            if (RightTopChild.LeftNeighbor != null)
+            {
+                RightTopChild.LeftTopPoint_Id = RightTopChild.LeftNeighbor.RightTopPoint_Id;
+                RightTopChild.LeftDownPoint_Id = RightTopChild.LeftNeighbor.RightDownPoint_Id;
+            }
 
             // Create points which we didn'MapPoint get from neighbors
-            if (_leftTopPtId != -1)
-                RightTopChild.LeftTopPoint_Id = _leftTopPtId;
-            else
+            if (RightTopChild.LeftTopPoint_Id == -1)
                 RightTopChild.LeftTopPoint_Id = Collection.points.Add(new MapPoint());
 
-            if (_leftDownPtId != -1)
-                RightTopChild.LeftDownPoint_Id = _leftDownPtId;
-            else
+            if (RightTopChild.LeftDownPoint_Id == -1)
                 RightTopChild.LeftDownPoint_Id = Collection.points.Add(new MapPoint());
 
-            if (_rightDownPtId != -1)
-                RightTopChild.RightDownPoint_Id = _rightDownPtId;
-            else
+            if (RightTopChild.RightDownPoint_Id == -1)
                 RightTopChild.RightDownPoint_Id = Collection.points.Add(new MapPoint());
         }
 
@@ -340,58 +289,34 @@ namespace Map.Generator.MapModels
             if (LeftNeighbor != null && LeftNeighbor.RightDownChild != null)
                 MakeHorizontalNeighbors(LeftNeighbor.RightDownChild, LeftDownChild);
 
-            int _leftTopPtId = -1;
-            int _rightTopPtId = -1;
-            int _rightDownPtId = -1;
-
-            // Try to use already created points
-            if (LeftTopChild != null)
-            {
-                if (_leftTopPtId == -1)
-                    _leftTopPtId = LeftTopChild.LeftDownPoint_Id;
-                if (_rightTopPtId == -1)
-                    _rightTopPtId = LeftTopChild.RightDownPoint_Id;
-            }
-            if (RightDownChild != null)
-            {
-                if (_rightTopPtId == -1)
-                    _rightTopPtId = RightDownChild.LeftTopPoint_Id;
-                if (_rightDownPtId == -1)
-                    _rightDownPtId = RightDownChild.LeftDownPoint_Id; ;
-            }
-            if (DownNeighbor != null)
-            {
-                if (DownNeighbor.LeftTopChild != null)
-                {
-                    if (_rightDownPtId == -1)
-                        _rightDownPtId = DownNeighbor.LeftTopChild.RightTopPoint_Id;
-                }
-            }
-            if (LeftNeighbor != null)
-            {
-                if (LeftNeighbor.RightDownChild != null)
-                {
-                    if (_leftTopPtId == -1)
-                        _leftTopPtId = LeftNeighbor.RightDownChild.RightTopPoint_Id;
-                }
-            }
-
             LeftDownChild.LeftDownPoint_Id = this.LeftDownPoint_Id;
+            if (LeftDownChild.TopNeighbor != null)
+            {
+                LeftDownChild.LeftTopPoint_Id = LeftDownChild.TopNeighbor.LeftDownPoint_Id;
+                LeftDownChild.RightTopPoint_Id = LeftDownChild.TopNeighbor.RightDownPoint_Id;
+            }
+            if (LeftDownChild.RightNeighbor != null)
+            {
+                LeftDownChild.RightTopPoint_Id = LeftDownChild.RightNeighbor.LeftTopPoint_Id;
+                LeftDownChild.RightDownPoint_Id = LeftDownChild.RightNeighbor.LeftDownPoint_Id;
+            }
+            if (LeftDownChild.DownNeighbor != null)
+            {
+                LeftDownChild.RightDownPoint_Id = LeftDownChild.DownNeighbor.RightTopPoint_Id;
+            }
+            if (LeftDownChild.LeftNeighbor != null)
+            {
+                LeftDownChild.LeftTopPoint_Id = LeftDownChild.LeftNeighbor.RightTopPoint_Id;
+            }
 
             // Create points which we didn'MapPoint get from neighbors
-            if (_leftTopPtId != -1)
-                LeftDownChild.LeftTopPoint_Id = _leftTopPtId;
-            else
+            if (LeftDownChild.LeftTopPoint_Id == -1)
                 LeftDownChild.LeftTopPoint_Id = Collection.points.Add(new MapPoint());
 
-            if (_rightTopPtId != -1)
-                LeftDownChild.RightTopPoint_Id = _rightTopPtId;
-            else
+            if (LeftDownChild.RightTopPoint_Id == -1)
                 LeftDownChild.RightTopPoint_Id = Collection.points.Add(new MapPoint());
 
-            if (_rightDownPtId != -1)
-                LeftDownChild.RightDownPoint_Id = _rightDownPtId;
-            else
+            if (LeftDownChild.RightDownPoint_Id == -1)
                 LeftDownChild.RightDownPoint_Id = Collection.points.Add(new MapPoint());
         }
 
@@ -409,58 +334,34 @@ namespace Map.Generator.MapModels
             if (LeftDownChild != null)
                 MakeHorizontalNeighbors(LeftDownChild, RightDownChild);
 
-            int _leftTopPtId = -1;
-            int _rightTopPtId = -1;
-            int _leftDownPtId = -1;
-
-            // Try to use already created points
-            if (RightTopChild != null)
-            {
-                if (_leftTopPtId == -1)
-                    _leftTopPtId = RightTopChild.LeftDownPoint_Id;
-                if (_rightTopPtId == -1)
-                    _rightTopPtId = RightTopChild.RightDownPoint_Id;
-            }
-            if (RightNeighbor != null)
-            {
-                if (RightNeighbor.LeftDownChild != null)
-                {
-                    if (_rightTopPtId == -1)
-                        _rightTopPtId = RightNeighbor.LeftDownChild.LeftTopPoint_Id;
-                }
-            }
-            if (DownNeighbor != null)
-            {
-                if (DownNeighbor.RightTopChild != null)
-                {
-                    if (_leftDownPtId == -1)
-                        _leftDownPtId = DownNeighbor.RightTopChild.LeftTopPoint_Id;
-                }
-            }
-            if (LeftDownChild != null)
-            {
-                if (_leftTopPtId == -1)
-                    _leftTopPtId = LeftDownChild.RightTopPoint_Id;
-                if (_leftDownPtId == -1)
-                    _leftDownPtId = LeftDownChild.RightDownPoint_Id;
-            }
-
             RightDownChild.RightDownPoint_Id = this.RightDownPoint_Id;
+            if (RightDownChild.TopNeighbor != null)
+            {
+                RightDownChild.LeftTopPoint_Id = RightDownChild.TopNeighbor.LeftDownPoint_Id;
+                RightDownChild.RightTopPoint_Id = RightDownChild.TopNeighbor.RightDownPoint_Id;
+            }
+            if (RightDownChild.RightNeighbor != null)
+            {
+                RightDownChild.RightTopPoint_Id = RightDownChild.RightNeighbor.LeftTopPoint_Id;
+            }
+            if (RightDownChild.DownNeighbor != null)
+            {
+                RightDownChild.LeftDownPoint_Id = RightDownChild.DownNeighbor.LeftTopPoint_Id;
+            }
+            if (RightDownChild.LeftNeighbor != null)
+            {
+                RightDownChild.LeftTopPoint_Id = RightDownChild.LeftNeighbor.RightTopPoint_Id;
+                RightDownChild.LeftDownPoint_Id = RightDownChild.LeftNeighbor.RightDownPoint_Id;
+            }
 
             // Create points which we didn'MapPoint get from neighbors
-            if (_leftTopPtId != -1)
-                RightDownChild.LeftTopPoint_Id = _leftTopPtId;
-            else
+            if (RightDownChild.LeftTopPoint_Id == -1)
                 RightDownChild.LeftTopPoint_Id = Collection.points.Add(new MapPoint());
 
-            if (_rightTopPtId != -1)
-                RightDownChild.RightTopPoint_Id = _rightTopPtId;
-            else
+            if (RightDownChild.RightTopPoint_Id == -1)
                 RightDownChild.RightTopPoint_Id = Collection.points.Add(new MapPoint());
 
-            if (_leftDownPtId != -1)
-                RightDownChild.LeftDownPoint_Id = _leftDownPtId;
-            else
+            if (RightDownChild.LeftDownPoint_Id == -1)
                 RightDownChild.LeftDownPoint_Id = Collection.points.Add(new MapPoint());
         }
 
