@@ -12,7 +12,6 @@ namespace Map.Generator.Algorithms
         /// </summary>
         // Max height change(calc from maxHeight) in one chunk (0..1)
         public float harshness = 0.1f;
-        public float minHeight = 0;
         public float maxHeight = 1;
         public float chunkSize;
 
@@ -48,7 +47,7 @@ namespace Map.Generator.Algorithms
             float _displacement = ((float)rand.NextDouble() * (2 * appl) - appl);
             if (pt.Height + _displacement > maxHeight)
                 _displacement *= -0.5f;
-            if (pt.Height + _displacement < minHeight)
+            if (pt.Height + _displacement < 0)
                 _displacement *= -0.5f;
             pt.Height += _displacement;
         }
@@ -63,28 +62,81 @@ namespace Map.Generator.Algorithms
                 if (!TryInterpolateAverage(pt, cur))
                     if (!TryExtrapolate(pt, cur))
                     {
-                        pt.Height = 0;
+                        return false;
                     }
             return true;
         }
 
-        void InitializeCorners(Area cur, float appl)
+        void TrimCornerHeight(MapPoint pt, Area cur)
         {
+            float maxFarHeight = 0;
+            // Find the biggest difference between neighbors
+            if (pt.TopNeighborInLayer(cur) != null &&
+                pt.TopNeighborInLayer(cur).IsGenerated &&
+                Math.Abs(pt.Height - pt.TopNeighborInLayer(cur).Height) > Math.Abs(maxFarHeight))
+            {
+                maxFarHeight = pt.Height - pt.TopNeighborInLayer(cur).Height;
+            }
+            if (pt.RightNeighborInLayer(cur) != null &&
+                pt.RightNeighborInLayer(cur).IsGenerated &&
+                Math.Abs(pt.Height - pt.RightNeighborInLayer(cur).Height) > Math.Abs(maxFarHeight))
+            {
+                maxFarHeight = pt.Height - pt.RightNeighborInLayer(cur).Height;
+            }
+            if (pt.DownNeighborInLayer(cur) != null &&
+                pt.DownNeighborInLayer(cur).IsGenerated &&
+                Math.Abs(pt.Height - pt.DownNeighborInLayer(cur).Height) > Math.Abs(maxFarHeight))
+            {
+                maxFarHeight = pt.Height - pt.DownNeighborInLayer(cur).Height;
+            }
+            if (pt.LeftNeighborInLayer(cur) != null &&
+                pt.LeftNeighborInLayer(cur).IsGenerated &&
+                Math.Abs(pt.Height - pt.LeftNeighborInLayer(cur).Height) > Math.Abs(maxFarHeight))
+            {
+                maxFarHeight = pt.Height - pt.LeftNeighborInLayer(cur).Height;
+            }
+
+            // If difference is too big, trim height
+            if (Math.Abs(maxFarHeight) > harshness * maxHeight)
+            {
+                if (maxFarHeight > 0)
+                    pt.Height -= maxFarHeight - harshness * maxHeight;
+                else
+                    pt.Height += Math.Abs(maxFarHeight) - harshness * maxHeight;
+            }
+        }
+
+        void InitializeCorners(Area cur)
+        {
+            // Try average each corner. If we can't, set random value
+
             AveragePoint(cur.LeftTopPoint_Val, cur);
             if (!cur.LeftTopPoint_Val.IsGenerated)
                 cur.LeftTopPoint_Val.Height = (float)rand.NextDouble() * harshness * maxHeight;
+            else
+                AddRandOffset(cur.LeftTopPoint_Val, harshness * maxHeight);
+            TrimCornerHeight(cur.LeftTopPoint_Val, cur);
 
             AveragePoint(cur.RightTopPoint_Val, cur);
             if (!cur.RightTopPoint_Val.IsGenerated)
                 cur.RightTopPoint_Val.Height = (float)rand.NextDouble() * harshness * maxHeight;
+            else
+                AddRandOffset(cur.RightTopPoint_Val, harshness * maxHeight);
+            TrimCornerHeight(cur.RightTopPoint_Val, cur);
 
             AveragePoint(cur.LeftDownPoint_Val, cur);
             if (!cur.LeftDownPoint_Val.IsGenerated)
                 cur.LeftDownPoint_Val.Height = (float)rand.NextDouble() * harshness * maxHeight;
+            else
+                AddRandOffset(cur.LeftDownPoint_Val, harshness * maxHeight);
+            TrimCornerHeight(cur.LeftDownPoint_Val, cur);
 
             AveragePoint(cur.RightDownPoint_Val, cur);
             if (!cur.RightDownPoint_Val.IsGenerated)
                 cur.RightDownPoint_Val.Height = (float)rand.NextDouble() * harshness * maxHeight;
+            else
+                AddRandOffset(cur.RightDownPoint_Val, harshness * maxHeight);
+            TrimCornerHeight(cur.RightDownPoint_Val, cur);
         }
 
         /// <summary>
@@ -275,7 +327,7 @@ namespace Map.Generator.Algorithms
             {
                 foreach (Area z in curLayer)
                 {
-                    InitializeCorners(z, harshness * maxHeight);
+                    InitializeCorners(z);
                 }
             }
             if (curDepth >= depth)
@@ -301,10 +353,14 @@ namespace Map.Generator.Algorithms
             // Diamond current layer
             foreach (Area z in curLayer)
             {
-                AveragePoint(z.LeftTopChild.RightTopPoint_Val, z.LeftTopChild);
-                AveragePoint(z.RightTopChild.RightDownPoint_Val, z.RightTopChild);
-                AveragePoint(z.RightDownChild.LeftDownPoint_Val, z.RightDownChild);
-                AveragePoint(z.LeftDownChild.LeftTopPoint_Val, z.LeftDownChild);
+                if (!AveragePoint(z.LeftTopChild.RightTopPoint_Val, z.LeftTopChild))
+                    throw new ArgumentException();
+                if (!AveragePoint(z.RightTopChild.RightDownPoint_Val, z.RightTopChild))
+                    throw new ArgumentException();
+                if (!AveragePoint(z.RightDownChild.LeftDownPoint_Val, z.RightDownChild))
+                    throw new ArgumentException();
+                if (!AveragePoint(z.LeftDownChild.LeftTopPoint_Val, z.LeftDownChild))
+                    throw new ArgumentException();
             }
 
             curLayer = nextLayer;
