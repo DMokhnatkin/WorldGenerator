@@ -4,6 +4,7 @@ using Map.MapModels;
 using Map.Generator.Geometry;
 using Map.MapModels.Areas;
 using Map.MapModels.Points;
+using Map.MapModels.Navigation.Points;
 
 namespace Map.Generator.Algorithms
 {
@@ -58,44 +59,44 @@ namespace Map.Generator.Algorithms
         /// Avverage point
         /// </summary>
         /// <returns>If height was setted true</returns>
-        bool AveragePoint(MapPoint pt, Area cur)
+        bool AveragePoint(MapPointInLayer pt)
         {
-            if (!TryInterpolateCubic(pt, cur))
-                if (!TryInterpolateAverage(pt, cur))
-                    if (!TryExtrapolate(pt, cur))
+            if (!TryInterpolateCubic(pt))
+                if (!TryInterpolateAverage(pt))
+                    if (!TryExtrapolate(pt))
                     {
                         return false;
                     }
             return true;
         }
 
-        void TrimCornerHeight(MapPoint pt, Area cur)
+        void TrimCornerHeight(MapPointInLayer pt)
         {
             float maxFarHeight = 0;
             // Find the biggest difference between neighbors
-            if (pt.TopNeighborInLayer(cur) != null &&
-                pt.TopNeighborInLayer(cur).IsGenerated &&
-                Math.Abs(pt.Height - pt.TopNeighborInLayer(cur).Height) > Math.Abs(maxFarHeight))
+            if (pt.TopNeighborInLayer() != null &&
+                pt.TopNeighborInLayer().IsGenerated &&
+                Math.Abs(pt.Height - pt.TopNeighborInLayer().Height) > Math.Abs(maxFarHeight))
             {
-                maxFarHeight = pt.Height - pt.TopNeighborInLayer(cur).Height;
+                maxFarHeight = pt.Height - pt.TopNeighborInLayer().Height;
             }
-            if (pt.RightNeighborInLayer(cur) != null &&
-                pt.RightNeighborInLayer(cur).IsGenerated &&
-                Math.Abs(pt.Height - pt.RightNeighborInLayer(cur).Height) > Math.Abs(maxFarHeight))
+            if (pt.RightNeighborInLayer() != null &&
+                pt.RightNeighborInLayer().IsGenerated &&
+                Math.Abs(pt.Height - pt.RightNeighborInLayer().Height) > Math.Abs(maxFarHeight))
             {
-                maxFarHeight = pt.Height - pt.RightNeighborInLayer(cur).Height;
+                maxFarHeight = pt.Height - pt.RightNeighborInLayer().Height;
             }
-            if (pt.DownNeighborInLayer(cur) != null &&
-                pt.DownNeighborInLayer(cur).IsGenerated &&
-                Math.Abs(pt.Height - pt.DownNeighborInLayer(cur).Height) > Math.Abs(maxFarHeight))
+            if (pt.DownNeighborInLayer() != null &&
+                pt.DownNeighborInLayer().IsGenerated &&
+                Math.Abs(pt.Height - pt.DownNeighborInLayer().Height) > Math.Abs(maxFarHeight))
             {
-                maxFarHeight = pt.Height - pt.DownNeighborInLayer(cur).Height;
+                maxFarHeight = pt.Height - pt.DownNeighborInLayer().Height;
             }
-            if (pt.LeftNeighborInLayer(cur) != null &&
-                pt.LeftNeighborInLayer(cur).IsGenerated &&
-                Math.Abs(pt.Height - pt.LeftNeighborInLayer(cur).Height) > Math.Abs(maxFarHeight))
+            if (pt.LeftNeighborInLayer() != null &&
+                pt.LeftNeighborInLayer().IsGenerated &&
+                Math.Abs(pt.Height - pt.LeftNeighborInLayer().Height) > Math.Abs(maxFarHeight))
             {
-                maxFarHeight = pt.Height - pt.LeftNeighborInLayer(cur).Height;
+                maxFarHeight = pt.Height - pt.LeftNeighborInLayer().Height;
             }
 
             // If difference is too big, trim height
@@ -112,33 +113,33 @@ namespace Map.Generator.Algorithms
         {
             // Try average each corner. If we can't, set random value
 
-            AveragePoint(cur.LeftTopPoint_Val, cur);
+            AveragePoint(new MapPointInLayer(cur.LeftTopPoint_Val, cur));
             if (!cur.LeftTopPoint_Val.IsGenerated)
                 cur.LeftTopPoint_Val.Height = (float)rand.NextDouble() * harshness * maxHeight;
             else
                 AddRandOffset(cur.LeftTopPoint_Val, harshness * maxHeight);
-            TrimCornerHeight(cur.LeftTopPoint_Val, cur);
+            TrimCornerHeight(new MapPointInLayer(cur.LeftTopPoint_Val, cur));
 
-            AveragePoint(cur.RightTopPoint_Val, cur);
+            AveragePoint(new MapPointInLayer(cur.RightTopPoint_Val, cur));
             if (!cur.RightTopPoint_Val.IsGenerated)
                 cur.RightTopPoint_Val.Height = (float)rand.NextDouble() * harshness * maxHeight;
             else
                 AddRandOffset(cur.RightTopPoint_Val, harshness * maxHeight);
-            TrimCornerHeight(cur.RightTopPoint_Val, cur);
+            TrimCornerHeight(new MapPointInLayer(cur.RightTopPoint_Val, cur));
 
-            AveragePoint(cur.LeftDownPoint_Val, cur);
+            AveragePoint(new MapPointInLayer(cur.LeftDownPoint_Val, cur));
             if (!cur.LeftDownPoint_Val.IsGenerated)
                 cur.LeftDownPoint_Val.Height = (float)rand.NextDouble() * harshness * maxHeight;
             else
                 AddRandOffset(cur.LeftDownPoint_Val, harshness * maxHeight);
-            TrimCornerHeight(cur.LeftDownPoint_Val, cur);
+            TrimCornerHeight(new MapPointInLayer(cur.LeftDownPoint_Val, cur));
 
-            AveragePoint(cur.RightDownPoint_Val, cur);
+            AveragePoint(new MapPointInLayer(cur.RightDownPoint_Val, cur));
             if (!cur.RightDownPoint_Val.IsGenerated)
                 cur.RightDownPoint_Val.Height = (float)rand.NextDouble() * harshness * maxHeight;
             else
                 AddRandOffset(cur.RightDownPoint_Val, harshness * maxHeight);
-            TrimCornerHeight(cur.RightDownPoint_Val, cur);
+            TrimCornerHeight(new MapPointInLayer(cur.RightDownPoint_Val, cur));
         }
 
         /// <summary>
@@ -146,12 +147,12 @@ namespace Map.Generator.Algorithms
         /// </summary>
         /// <param name="pt"></param>
         /// <param name="cur"></param>
-        bool TryInterpolateAverage(MapPoint pt, Area cur)
+        bool TryInterpolateAverage(MapPointInLayer pt)
         {
             float sum = 0;
             int ct = 0;
-            MapPoint _leftNeighbor = pt.LeftNeighborInLayer(cur);
-            MapPoint _rightNeighbor = pt.RightNeighborInLayer(cur);
+            MapPointInLayer _leftNeighbor = pt.LeftNeighborInLayer();
+            MapPointInLayer _rightNeighbor = pt.RightNeighborInLayer();
             if (_leftNeighbor != null &&
                 _leftNeighbor.IsGenerated &&
                 _rightNeighbor != null &&
@@ -162,8 +163,8 @@ namespace Map.Generator.Algorithms
                 ct += 2;
             }
 
-            MapPoint _topNeighbor = pt.TopNeighborInLayer(cur);
-            MapPoint _downNeighbor = pt.DownNeighborInLayer(cur);
+            MapPointInLayer _topNeighbor = pt.TopNeighborInLayer();
+            MapPointInLayer _downNeighbor = pt.DownNeighborInLayer();
             // Try use top and down deighbor
             if (_topNeighbor != null &&
                 _topNeighbor.IsGenerated &&
@@ -183,15 +184,15 @@ namespace Map.Generator.Algorithms
             return false;
         }
 
-        bool TryInterpolateCubic(MapPoint pt, Area cur)
+        bool TryInterpolateCubic(MapPointInLayer pt)
         {
             float sum = 0;
             int ct = 0;
 
-            MapPoint _leftNeighbor = pt.LeftNeighborInLayer(cur);
-            MapPoint _leftLeftNeighbor = pt.LeftNeighborInLayer(cur, 2); // Left neighbor of left neighbor
-            MapPoint _rightNeighbor = pt.RightNeighborInLayer(cur);
-            MapPoint _rightRightNeighbor = pt.RightNeighborInLayer(cur, 2); // Right neighbor of right neighbor
+            MapPointInLayer _leftNeighbor = pt.LeftNeighborInLayer();
+            MapPointInLayer _leftLeftNeighbor = pt.LeftNeighborInLayer(2); // Left neighbor of left neighbor
+            MapPointInLayer _rightNeighbor = pt.RightNeighborInLayer();
+            MapPointInLayer _rightRightNeighbor = pt.RightNeighborInLayer(2); // Right neighbor of right neighbor
             // Horizontal
             if (_leftNeighbor != null &&
                 _leftNeighbor.IsGenerated &&
@@ -200,7 +201,7 @@ namespace Map.Generator.Algorithms
                 _rightNeighbor != null &&
                 _rightNeighbor.IsGenerated &&
                 _rightRightNeighbor != null &&
-                _rightRightNeighbor.IsGenerated)
+                _rightRightNeighbor.MapPoint.IsGenerated)
             {
                 sum += Interpolation.Cubic4Points(
                     _leftLeftNeighbor.Height,
@@ -210,10 +211,10 @@ namespace Map.Generator.Algorithms
                 ct += 1;
             }
 
-            MapPoint _topNeighbor = pt.TopNeighborInLayer(cur);
-            MapPoint _topTopNeighbor = pt.TopNeighborInLayer(cur, 2);
-            MapPoint _downNeighbor = pt.DownNeighborInLayer(cur);
-            MapPoint _downDownNeighbor = pt.DownNeighborInLayer(cur, 2);
+            MapPointInLayer _topNeighbor = pt.TopNeighborInLayer();
+            MapPointInLayer _topTopNeighbor = pt.TopNeighborInLayer(2);
+            MapPointInLayer _downNeighbor = pt.DownNeighborInLayer();
+            MapPointInLayer _downDownNeighbor = pt.DownNeighborInLayer(2);
             // Vertical
             if (_topNeighbor != null &&
                 _topNeighbor.IsGenerated &&
@@ -242,13 +243,13 @@ namespace Map.Generator.Algorithms
         /// <summary>
         /// Try set height to point by extrapolating neighbors
         /// </summary>
-        bool TryExtrapolate(MapPoint pt, Area cur)
+        bool TryExtrapolate(MapPointInLayer pt)
         {
             float sum = 0;
             int ct = 0;
 
-            MapPoint _topNeighbor = pt.TopNeighborInLayer(cur);
-            MapPoint _topTopNeighbor = pt.TopNeighborInLayer(cur, 2); // Top neighbor of top neighbor
+            MapPointInLayer _topNeighbor = pt.TopNeighborInLayer();
+            MapPointInLayer _topTopNeighbor = pt.TopNeighborInLayer(2); // Top neighbor of top neighbor
             // Use top neighbor and its top neighbor
             if (_topNeighbor != null &&
                 _topNeighbor.IsGenerated &&
@@ -261,8 +262,8 @@ namespace Map.Generator.Algorithms
                 ct++;
             }
 
-            MapPoint _rightNeighbor = pt.RightNeighborInLayer(cur);
-            MapPoint _rightRightNeighbor = pt.RightNeighborInLayer(cur, 2);
+            MapPointInLayer _rightNeighbor = pt.RightNeighborInLayer();
+            MapPointInLayer _rightRightNeighbor = pt.RightNeighborInLayer(2);
             // Use right neighbor and its right neighbor
             if (_rightNeighbor != null &&
                 _rightNeighbor.IsGenerated &&
@@ -275,8 +276,8 @@ namespace Map.Generator.Algorithms
                 ct++;
             }
 
-            MapPoint _downNeighbor = pt.DownNeighborInLayer(cur);
-            MapPoint _downDownNeighbor = pt.DownNeighborInLayer(cur, 2);
+            MapPointInLayer _downNeighbor = pt.DownNeighborInLayer();
+            MapPointInLayer _downDownNeighbor = pt.DownNeighborInLayer(2);
             // Use down neighbor and its down neighbor
             if (_downNeighbor != null &&
                 _downNeighbor.IsGenerated &&
@@ -289,8 +290,8 @@ namespace Map.Generator.Algorithms
                 ct++;
             }
 
-            MapPoint _leftNeighbor = pt.LeftNeighborInLayer(cur);
-            MapPoint _leftLeftNeighbor = pt.LeftNeighborInLayer(cur, 2);
+            MapPointInLayer _leftNeighbor = pt.LeftNeighborInLayer();
+            MapPointInLayer _leftLeftNeighbor = pt.LeftNeighborInLayer(2);
             // Use left neighbor and its left neighbor
             if (_leftNeighbor != null &&
                 _leftNeighbor.IsGenerated &&
@@ -355,13 +356,13 @@ namespace Map.Generator.Algorithms
             // Diamond current layer
             foreach (Area z in curLayer)
             {
-                if (!AveragePoint(z.LeftTopChild.RightTopPoint_Val, z.LeftTopChild))
+                if (!AveragePoint(new MapPointInLayer(z.LeftTopChild.RightTopPoint_Val, z.LeftTopChild)))
                     throw new ArgumentException();
-                if (!AveragePoint(z.RightTopChild.RightDownPoint_Val, z.RightTopChild))
+                if (!AveragePoint(new MapPointInLayer(z.RightTopChild.RightDownPoint_Val, z.RightTopChild)))
                     throw new ArgumentException();
-                if (!AveragePoint(z.RightDownChild.LeftDownPoint_Val, z.RightDownChild))
+                if (!AveragePoint(new MapPointInLayer(z.RightDownChild.LeftDownPoint_Val, z.RightDownChild)))
                     throw new ArgumentException();
-                if (!AveragePoint(z.LeftDownChild.LeftTopPoint_Val, z.LeftDownChild))
+                if (!AveragePoint(new MapPointInLayer(z.LeftDownChild.LeftTopPoint_Val, z.LeftDownChild)))
                     throw new ArgumentException();
             }
 

@@ -6,7 +6,7 @@ using Map.Generator.Algorithms.Erosion;
 
 namespace Map.MapModels.Points
 {
-    public class MapPoint
+    public class MapPoint : IMapPoint
     {
         bool _generated = false;
 

@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Map.MapModels;
 using Map.MapModels.Areas;
+using Map.MapModels.Points;
 
-namespace Map.MapModels.Points
+namespace Map.MapModels.Navigation.Points
 {
-    public static class PointNavigateExtensions
+    public static class NavigateExtensions
     {
         public static bool IsLeftTopInArea(this MapPoint pt, Area area)
         {
@@ -66,18 +63,13 @@ namespace Map.MapModels.Points
         /// </summary>
         /// <param name="index">How much points skip</param>
         /// <returns></returns>
-        public static MapPoint TopNeighborInLayer(this MapPoint point, Area area, int index)
+        public static MapPointInLayer TopNeighborInLayer(this MapPointInLayer point, int index)
         {
-            Area curArea = area;
-            MapPoint curPt = point;
+            MapPointInLayer curPt = point;
             for (int i = 0; i < index; i++)
             {
-                curPt = curPt.TopNeighborInLayer(curArea);
+                curPt = curPt.TopNeighborInLayer();
                 if (curPt == null)
-                    return null;
-                if (!curPt.IsInArea(curArea))
-                    curArea = curArea.TopNeighbor;
-                if (curArea == null)
                     return null;
             }
             return curPt;
@@ -88,18 +80,13 @@ namespace Map.MapModels.Points
         /// </summary>
         /// <param name="index">How much points skip</param>
         /// <returns></returns>
-        public static MapPoint RightNeighborInLayer(this MapPoint point, Area area, int index)
+        public static MapPointInLayer RightNeighborInLayer(this MapPointInLayer pt, int index)
         {
-            Area curArea = area;
-            MapPoint curPt = point;
+            MapPointInLayer curPt = pt;
             for (int i = 0; i < index; i++)
             {
-                curPt = curPt.RightNeighborInLayer(curArea);
+                curPt = curPt.RightNeighborInLayer();
                 if (curPt == null)
-                    return null;
-                if (!curPt.IsInArea(curArea))
-                    curArea = curArea.RightNeighbor;
-                if (curArea == null)
                     return null;
             }
             return curPt;
@@ -110,18 +97,13 @@ namespace Map.MapModels.Points
         /// </summary>
         /// <param name="index">How much points skip</param>
         /// <returns></returns>
-        public static MapPoint DownNeighborInLayer(this MapPoint point, Area area, int index)
+        public static MapPointInLayer DownNeighborInLayer(this MapPointInLayer pt, int index)
         {
-            Area curArea = area;
-            MapPoint curPt = point;
+            MapPointInLayer curPt = pt;
             for (int i = 0; i < index; i++)
             {
-                curPt = curPt.DownNeighborInLayer(curArea);
+                curPt = curPt.DownNeighborInLayer();
                 if (curPt == null)
-                    return null;
-                if (!curPt.IsInArea(curArea))
-                    curArea = curArea.DownNeighbor;
-                if (curArea == null)
                     return null;
             }
             return curPt;
@@ -132,18 +114,13 @@ namespace Map.MapModels.Points
         /// </summary>
         /// <param name="index">How much points skip</param>
         /// <returns></returns>
-        public static MapPoint LeftNeighborInLayer(this MapPoint point, Area area, int index)
+        public static MapPointInLayer LeftNeighborInLayer(this MapPointInLayer pt, int index)
         {
-            Area curArea = area;
-            MapPoint curPt = point;
+            MapPointInLayer curPt = pt;
             for (int i = 0; i < index; i++)
             {
-                curPt = curPt.LeftNeighborInLayer(curArea);
+                curPt = curPt.LeftNeighborInLayer();
                 if (curPt == null)
-                    return null;
-                if (!curPt.IsInArea(curArea))
-                    curArea = curArea.LeftNeighbor;
-                if (curArea == null)
                     return null;
             }
             return curPt;
@@ -152,58 +129,60 @@ namespace Map.MapModels.Points
         /// <summary>
         /// Get top neighbor for point in area depth layer in which area is
         /// </summary>
-        public static MapPoint TopNeighborInLayer(this MapPoint point, Area area)
+        public static MapPointInLayer TopNeighborInLayer(this MapPointInLayer pt)
         {
+            Area area = pt.Area;
+            MapPoint point = pt.MapPoint;
             /* Corners */
-            if (point.IsLeftTopInArea(area))
+            if (pt.IsLeftTopInArea)
             {
                 if (area.TopNeighbor != null)
-                    return area.TopNeighbor.LeftTopPoint_Val;
+                    return new MapPointInLayer(area.TopNeighbor.LeftTopPoint_Val, area.TopNeighbor);
                 return null;
             }
-            if (point.IsRightTopInArea(area))
+            if (pt.IsRightTopInArea)
             {
                 if (area.TopNeighbor != null)
-                    return area.TopNeighbor.RightTopPoint_Val;
+                    return new MapPointInLayer(area.TopNeighbor.RightTopPoint_Val, area.TopNeighbor);
                 return null;
             }
-            if (point.IsLeftDownInArea(area))
+            if (pt.IsLeftDownInArea)
             {
-                return area.LeftTopPoint_Val;
+                return new MapPointInLayer(area.LeftTopPoint_Val, area);
             }
-            if (point.IsRightDownInArea(area))
+            if (pt.IsRightDownInArea)
             {
-                return area.RightTopPoint_Val;
+                return new MapPointInLayer(area.RightTopPoint_Val, area);
             }
 
             /* Edges */
-            if (point.IsTopEdgeMiddlePt(area))
+            if (pt.IsTopEdgeMiddlePt)
             {
                 if (area.TopNeighbor != null)
-                    return area.TopNeighbor.TopEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.TopNeighbor.TopEdgeMiddlePt_Val, area.TopNeighbor);
                 return null;
             }
-            if (point.IsRightEdgeMiddlePt(area))
+            if (pt.IsRightEdgeMiddlePt)
             {
                 if (area.TopNeighbor != null)
-                    return area.TopNeighbor.RightEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.TopNeighbor.RightEdgeMiddlePt_Val, area.TopNeighbor);
                 return null;
             }
-            if (point.IsDownEdgeMiddlePt(area))
+            if (pt.IsDownEdgeMiddlePt)
             {
-                return area.TopEdgeMiddlePt_Val;
+                return new MapPointInLayer(area.TopEdgeMiddlePt_Val, area);
             }
-            if (point.IsLeftEdgeMiddlePt(area))
+            if (pt.IsLeftEdgeMiddlePt)
             {
                 if (area.TopNeighbor != null)
-                    return area.TopNeighbor.LeftEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.TopNeighbor.LeftEdgeMiddlePt_Val, area.TopNeighbor);
                 return null;
             }
             /* Middle point */
-            if (point.IsMiddlePt(area))
+            if (pt.IsMiddlePt)
             {
                 if (area.TopNeighbor != null)
-                    return area.TopNeighbor.MiddlePt_Val;
+                    return new MapPointInLayer(area.TopNeighbor.MiddlePt_Val, area.TopNeighbor);
                 return null;
             }
             throw new ArgumentException("area doesn't contains point");
@@ -212,59 +191,61 @@ namespace Map.MapModels.Points
         /// <summary>
         /// Get right neighbor for point in depth layer in which area is
         /// </summary>
-        public static MapPoint RightNeighborInLayer(this MapPoint point, Area area)
+        public static MapPointInLayer RightNeighborInLayer(this MapPointInLayer pt)
         {
+            MapPoint point = pt.MapPoint;
+            Area area = pt.Area;
             /* Corners */
-            if (point.IsLeftTopInArea(area))
+            if (pt.IsLeftTopInArea)
             {
-                return area.RightTopPoint_Val;
+                return new MapPointInLayer(area.RightTopPoint_Val, area);
             }
-            if (point.IsRightTopInArea(area))
+            if (pt.IsRightTopInArea)
             {
                 if (area.RightNeighbor != null)
-                    return area.RightNeighbor.RightTopPoint_Val;
+                    return new MapPointInLayer(area.RightNeighbor.RightTopPoint_Val, area.RightNeighbor);
                 return null;
             }
-            if (point.IsLeftDownInArea(area))
+            if (pt.IsLeftDownInArea)
             {
-                return area.RightDownPoint_Val;
+                return new MapPointInLayer(area.RightDownPoint_Val, area);
             }
-            if (point.IsRightDownInArea(area))
+            if (pt.IsRightDownInArea)
             {
                 if (area.RightNeighbor != null)
-                    return area.RightNeighbor.RightDownPoint_Val;
+                    return new MapPointInLayer(area.RightNeighbor.RightDownPoint_Val, area.RightNeighbor);
                 return null;
             }
 
             /* Edges */
-            if (point.IsTopEdgeMiddlePt(area))
+            if (pt.IsTopEdgeMiddlePt)
             {
                 if (area.RightNeighbor != null)
-                    return area.RightNeighbor.TopEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.RightNeighbor.TopEdgeMiddlePt_Val, area.RightNeighbor);
                 return null;
             }
-            if (point.IsRightEdgeMiddlePt(area))
+            if (pt.IsRightEdgeMiddlePt)
             {
                 if (area.RightNeighbor != null)
-                    return area.RightNeighbor.RightEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.RightNeighbor.RightEdgeMiddlePt_Val, area.RightNeighbor);
                 return null;
             }
-            if (point.IsDownEdgeMiddlePt(area))
+            if (pt.IsDownEdgeMiddlePt)
             {
                 if (area.RightNeighbor != null)
-                    return area.RightNeighbor.DownEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.RightNeighbor.DownEdgeMiddlePt_Val, area.RightNeighbor);
                 return null;
             }
-            if (point.IsLeftEdgeMiddlePt(area))
+            if (pt.IsLeftEdgeMiddlePt)
             {
-                return area.RightEdgeMiddlePt_Val;
+                return new MapPointInLayer(area.RightEdgeMiddlePt_Val, area);
             }
 
             /* Middle point */
-            if (point.IsMiddlePt(area))
+            if (pt.IsMiddlePt)
             {
                 if (area.RightNeighbor != null)
-                    return area.RightNeighbor.MiddlePt_Val;
+                    return new MapPointInLayer(area.RightNeighbor.MiddlePt_Val, area.RightNeighbor);
                 return null;
             }
             throw new ArgumentException("area doesn't contains point");
@@ -273,59 +254,61 @@ namespace Map.MapModels.Points
         /// <summary>
         /// Get down neighbor for point in cur depth layer in which area is
         /// </summary>
-        public static MapPoint DownNeighborInLayer(this MapPoint point, Area area)
+        public static MapPointInLayer DownNeighborInLayer(this MapPointInLayer pt)
         {
+            Area area = pt.Area;
+            MapPoint point = pt.MapPoint;
             /* Corners */
-            if (point.IsLeftTopInArea(area))
+            if (pt.IsLeftTopInArea)
             {
-                return area.LeftDownPoint_Val;
+                return new MapPointInLayer(area.LeftDownPoint_Val, area);
             }
-            if (point.IsRightTopInArea(area))
+            if (pt.IsRightTopInArea)
             {
-                return area.RightDownPoint_Val;
+                return new MapPointInLayer(area.RightDownPoint_Val, area);
             }
-            if (point.IsLeftDownInArea(area))
+            if (pt.IsLeftDownInArea)
             {
                 if (area.DownNeighbor != null)
-                    return area.DownNeighbor.LeftDownPoint_Val;
+                    return new MapPointInLayer(area.DownNeighbor.LeftDownPoint_Val, area.DownNeighbor);
                 return null;
             }
-            if (point.IsRightDownInArea(area))
+            if (pt.IsRightDownInArea)
             {
                 if (area.DownNeighbor != null)
-                    return area.DownNeighbor.RightDownPoint_Val;
+                    return new MapPointInLayer(area.DownNeighbor.RightDownPoint_Val, area.DownNeighbor);
                 return null;
             }
 
             /* Edges */
-            if (point.IsTopEdgeMiddlePt(area))
+            if (pt.IsTopEdgeMiddlePt)
             {
-                return area.DownEdgeMiddlePt_Val;
+                return new MapPointInLayer(area.DownEdgeMiddlePt_Val, area);
             }
-            if (point.IsRightEdgeMiddlePt(area))
+            if (pt.IsRightEdgeMiddlePt)
             {
                 if (area.DownNeighbor != null)
-                    return area.DownNeighbor.RightEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.DownNeighbor.RightEdgeMiddlePt_Val, area.DownNeighbor);
                 return null;
             }
-            if (point.IsDownEdgeMiddlePt(area))
+            if (pt.IsDownEdgeMiddlePt)
             {
                 if (area.DownNeighbor != null)
-                    return area.DownNeighbor.DownEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.DownNeighbor.DownEdgeMiddlePt_Val, area.DownNeighbor);
                 return null;
             }
-            if (point.IsLeftEdgeMiddlePt(area))
+            if (pt.IsLeftEdgeMiddlePt)
             {
                 if (area.DownNeighbor != null)
-                    return area.DownNeighbor.LeftEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.DownNeighbor.LeftEdgeMiddlePt_Val, area.DownNeighbor);
                 return null;
             }
 
             /* Middle point */
-            if (point.IsMiddlePt(area))
+            if (pt.IsMiddlePt)
             {
                 if (area.DownNeighbor != null)
-                    return area.DownNeighbor.MiddlePt_Val;
+                    return new MapPointInLayer(area.DownNeighbor.MiddlePt_Val, area.DownNeighbor);
                 return null;
             }
 
@@ -335,59 +318,61 @@ namespace Map.MapModels.Points
         /// <summary>
         /// Get left neighbor for point in cur depth layer in which area is
         /// </summary>
-        public static MapPoint LeftNeighborInLayer(this MapPoint point, Area area)
+        public static MapPointInLayer LeftNeighborInLayer(this MapPointInLayer pt)
         {
+            MapPoint point = pt.MapPoint;
+            Area area = pt.Area;
             /* Corners */
-            if (point.IsLeftTopInArea(area))
+            if (pt.IsLeftTopInArea)
             {
                 if (area.LeftNeighbor != null)
-                    return area.LeftNeighbor.LeftTopPoint_Val;
+                    return new MapPointInLayer(area.LeftNeighbor.LeftTopPoint_Val, area.LeftNeighbor);
                 return null;
             }
-            if (point.IsRightTopInArea(area))
+            if (pt.IsRightTopInArea)
             {
-                return area.LeftTopPoint_Val;
+                return new MapPointInLayer(area.LeftTopPoint_Val, area);
             }
-            if (point.IsLeftDownInArea(area))
+            if (pt.IsLeftDownInArea)
             {
                 if (area.LeftNeighbor != null)
-                    return area.LeftNeighbor.LeftDownPoint_Val;
+                    return new MapPointInLayer(area.LeftNeighbor.LeftDownPoint_Val, area.LeftNeighbor);
                 return null;
             }
-            if (point.IsRightDownInArea(area))
+            if (pt.IsRightDownInArea)
             {
-                return area.LeftDownPoint_Val;
+                return new MapPointInLayer(area.LeftDownPoint_Val, area);
             }
 
             /* Edges */
-            if (point.IsTopEdgeMiddlePt(area))
+            if (pt.IsTopEdgeMiddlePt)
             {
                 if (area.LeftNeighbor != null)
-                    return area.LeftNeighbor.TopEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.LeftNeighbor.TopEdgeMiddlePt_Val, area.LeftNeighbor);
                 return null;
             }
-            if (point.IsRightEdgeMiddlePt(area))
+            if (pt.IsRightEdgeMiddlePt)
             {
-                return area.LeftEdgeMiddlePt_Val;
+                return new MapPointInLayer(area.LeftEdgeMiddlePt_Val, area);
             }
-            if (point.IsDownEdgeMiddlePt(area))
+            if (pt.IsDownEdgeMiddlePt)
             {
                 if (area.LeftNeighbor != null)
-                    return area.LeftNeighbor.DownEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.LeftNeighbor.DownEdgeMiddlePt_Val, area.LeftNeighbor);
                 return null;
             }
-            if (point.IsLeftEdgeMiddlePt(area))
+            if (pt.IsLeftEdgeMiddlePt)
             {
                 if (area.LeftNeighbor != null)
-                    return area.LeftNeighbor.LeftEdgeMiddlePt_Val;
+                    return new MapPointInLayer(area.LeftNeighbor.LeftEdgeMiddlePt_Val, area.LeftNeighbor);
                 return null;
             }
 
             /* Middle point */
-            if (point.IsMiddlePt(area))
+            if (pt.IsMiddlePt)
             {
                 if (area.LeftNeighbor != null)
-                    return area.LeftNeighbor.MiddlePt_Val;
+                    return new MapPointInLayer(area.LeftNeighbor.MiddlePt_Val, area.LeftNeighbor);
                 return null;
             }
             throw new ArgumentException("area doesn't contains point");
