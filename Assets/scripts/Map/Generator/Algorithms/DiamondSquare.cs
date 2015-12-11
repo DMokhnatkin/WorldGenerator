@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using Map.Generator.MapModels;
+using Map.MapModels;
 using Map.Generator.Geometry;
+using Map.MapModels.Areas;
+using Map.MapModels.Points;
 
 namespace Map.Generator.Algorithms
 {
@@ -11,7 +13,7 @@ namespace Map.Generator.Algorithms
         /// 0..1
         /// </summary>
         // Max height change(calc from maxHeight) in one chunk (0..1)
-        public float harshness = 0.1f;
+        public float harshness = 0.05f;
         public float maxHeight = 1;
         public float chunkSize;
 
