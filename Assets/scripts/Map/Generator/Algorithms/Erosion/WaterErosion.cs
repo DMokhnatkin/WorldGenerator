@@ -8,11 +8,11 @@ namespace Map.Generator.Algorithms.Erosion
     public class WaterErosion
     {
         /// <summary>
-        /// 
+        /// Only for generated area
         /// </summary>
         /// <param name="area"></param>
         /// <param name="radius"></param>
-        private static void UpdateErosionStrength(Area area, int radius)
+        private static void CalcErosionStrength(Area area, int radius)
         {
             Area[,] areas = area.GetAreasAround(radius);
             foreach (Area a in areas)

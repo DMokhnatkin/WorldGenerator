@@ -1,23 +1,80 @@
 ﻿using System;
 using Map.MapModels.Points;
+using System.Collections.Generic;
 
 namespace Map.MapModels.Areas
 {
-    public class AreaTree
+    public struct Coord
+    {
+        public int x;
+        public int y;
+
+        public Coord(int x, int y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return x == ((Coord)obj).x && y == ((Coord)obj).y;
+        }
+
+        public override int GetHashCode()
+        {
+            return x * y + x;
+        }
+
+        public Coord Top
+        {
+            get { return new Coord(x, y + 1); }
+        }
+
+        public Coord Right
+        {
+            get { return new Coord(x + 1, y); }
+        }
+
+        public Coord Down
+        {
+            get { return new Coord(x, y - 1); }
+        }
+
+        public Coord Left
+        {
+            get { return new Coord(x - 1, y); }
+        }
+    }
+
+    /// <summary>
+    /// Represents grid of chunks(areas)
+    /// Which area can be subdivided
+    /// </summary>
+    public class AreaGrid
     {
         internal FreeIdCollection<MapPoint> points;
 
-        Area _root;
+        Dictionary<Coord, Area> _chunks = new Dictionary<Coord, Area>();
+        Dictionary<Area, Coord> _coords = new Dictionary<Area, Coord>();
 
-        public AreaTree()
+        public AreaGrid()
         {
             points = new FreeIdCollection<MapPoint>();
-            UpRoot();
+            CreateChunk(new Coord(0, 0));
         }
 
-        public Area Root
+        public Area GetChunk(Coord coord)
         {
-            get { return _root; }
+            if (!_chunks.ContainsKey(coord))
+                return null;
+            return _chunks[coord];
+        }
+
+        public Coord GetCoord(Area area)
+        {
+            if (!_coords.ContainsKey(area))
+                throw new ArgumentException("Doesn't contains area : " + area);
+            return _coords[area];
         }
 
         /// <summary>
@@ -51,8 +108,9 @@ namespace Map.MapModels.Areas
                 }
                 else
                 {
-                    UpRoot(2);
-                    _root.CreateLeftTopChild(); // Create topNeighborg
+                    Coord coord = GetCoord(cur);
+                    // Create new chunk in grid
+                    CreateChunk(coord.Top);
                 }
             }
         }
@@ -88,8 +146,9 @@ namespace Map.MapModels.Areas
                 }
                 else
                 {
-                    UpRoot(0);
-                    _root.CreateRightTopChild(); // Create rightNeighborg
+                    Coord coord = GetCoord(cur);
+                    // Create new chunk in grid
+                    CreateChunk(coord.Right);
                 }
             }
         }
@@ -121,8 +180,9 @@ namespace Map.MapModels.Areas
                 }
                 else
                 {
-                    UpRoot(0);
-                    _root.CreateLeftDownChild(); // Create downNeighborg
+                    Coord coord = GetCoord(cur);
+                    // Create new chunk in grid
+                    CreateChunk(coord.Down);
                 }
             }
         }
@@ -158,71 +218,22 @@ namespace Map.MapModels.Areas
                 }
                 else
                 {
-                    UpRoot(1);
-                    _root.CreateLeftTopChild(); // Create leftNeighborg
+                    Coord coord = GetCoord(cur);
+                    // Create new chunk in grid
+                    CreateChunk(coord.Left);
                 }
             }
         }
 
-        /// <summary>
-        /// Create new root and make current as leftTopChild of new
-        /// </summary>
-        /// <param name="child">What child make current root 
-        /// 0 - leftTop, 1 - rightTop, 2 - leftDown, 3 - rightDown</param>
-        void UpRoot(int child = 0)
+        public Area CreateChunk(Coord coord)
         {
-            Area _newRoot = new Area(null, this);
-            if (_root != null)
-            {
-                switch (child)
-                {
-                    case 0:
-                        {
-                            _newRoot.LeftTopChild = _root;
-                            _newRoot.LeftTopPoint_Id = _root.LeftTopPoint_Id;
-                            _newRoot.RightTopPoint_Id = points.Add(new MapPoint());
-                            _newRoot.LeftDownPoint_Id = points.Add(new MapPoint());
-                            _newRoot.RightDownPoint_Id = points.Add(new MapPoint());
-                            break;
-                        }
-                    case 1:
-                        {
-                            _newRoot.RightTopChild = _root;
-                            _newRoot.LeftTopPoint_Id = points.Add(new MapPoint());
-                            _newRoot.RightTopPoint_Id = _root.RightTopPoint_Id;
-                            _newRoot.LeftDownPoint_Id = points.Add(new MapPoint());
-                            _newRoot.RightDownPoint_Id = points.Add(new MapPoint());
-                            break;
-                        }
-                    case 2:
-                        {
-                            _newRoot.LeftDownChild = _root;
-                            _newRoot.LeftTopPoint_Id = points.Add(new MapPoint());
-                            _newRoot.RightTopPoint_Id = points.Add(new MapPoint());
-                            _newRoot.LeftDownPoint_Id = _root.LeftDownPoint_Id;
-                            _newRoot.RightDownPoint_Id = points.Add(new MapPoint());
-                            break;
-                        }
-                    case 3:
-                        {
-                            _newRoot.RightDownChild = _root;
-                            _newRoot.LeftTopPoint_Id = points.Add(new MapPoint());
-                            _newRoot.RightTopPoint_Id = points.Add(new MapPoint());
-                            _newRoot.LeftDownPoint_Id = points.Add(new MapPoint());
-                            _newRoot.RightDownPoint_Id = _root.RightDownPoint_Id;
-                            break;
-                        }
-                }
-                _root.Parent = _newRoot;
-            }
-            else
-            {
-                _newRoot.LeftTopPoint_Id = points.Add(new MapPoint());
-                _newRoot.RightTopPoint_Id = points.Add(new MapPoint());
-                _newRoot.LeftDownPoint_Id = points.Add(new MapPoint());
-                _newRoot.RightDownPoint_Id = points.Add(new MapPoint());
-            }
-            _root = _newRoot;
+            Area newArea = new Area(
+                null, this,
+                GetChunk(coord.Top), GetChunk(coord.Right),
+                GetChunk(coord.Down), GetChunk(coord.Left));
+            _chunks.Add(coord, newArea);
+            _coords.Add(newArea, coord);
+            return newArea;
         }
     }
 }

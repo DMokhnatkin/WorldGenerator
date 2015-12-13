@@ -14,7 +14,7 @@ namespace Map.World
     public class Landscape : MonoBehaviour
     {
         // Model part of map
-        private AreaTree mapModel;
+        private AreaGrid mapModel;
 
         // Visual part of map
         public MapViewer mapViewer;
@@ -26,13 +26,18 @@ namespace Map.World
         /// </summary>
         public GameObject player;
 
-        private LandscapeSettings settings;
-
         System.Random rand = new System.Random();
 
-        public Area CurArea { get; private set; }
+        public Coord CurCoord { get; private set; }
 
-        public AreaTree MapModel { get { return mapModel; } }
+        public Area CurArea
+        {
+            get { return MapModel.GetChunk(CurCoord); }
+        }
+
+        public LandscapeSettings Settings { get; private set; }
+
+        public AreaGrid MapModel { get { return mapModel; } }
 
         public Vector3 CurAreaLeftDownPos
         {
@@ -41,44 +46,45 @@ namespace Map.World
 
         void Awake()
         {
-            mapModel = new AreaTree();
+            CurCoord = new Coord(0, 0);
+            mapModel = new AreaGrid();
             mapViewer = GetComponent<MapViewer>();
-
-            settings = GetComponent<LandscapeSettings>();
-            generator = new Generator(settings);
-            CurArea = mapModel.Root;
         }
 
+        [ExecuteInEditMode]
         void Start()
         {
-            generator.GenerateAround(CurArea, settings);
+            Settings = GetComponent<LandscapeSettings>();
+            generator = new Generator(Settings);
+
+            generator.GenerateAround(CurArea, Settings);
             mapViewer.RenderStaticChunk(CurArea,
                 new Vector3(player.transform.position.x, 0, player.transform.position.z) +
-                new Vector3(-(int)settings.chunkSize / 2.0f, 0, -(int)settings.chunkSize / 2.0f));
+                new Vector3(-(int)Settings.chunkSize / 2.0f, 0, -(int)Settings.chunkSize / 2.0f));
             RenderAround();
         }
 
         void RenderAround()
         {
-            int r = settings.depths.Sum((x) => { return x; });
+            int r = Settings.depths.Sum((x) => { return x; });
             Area[,] z = CurArea.GetAreasAround(r);
             for (int i = 0; i < z.GetLength(0); i++)
                 for (int j = 0; j < z.GetLength(1); j++)
                 {
                     if (z[i, j] == null)
                         continue;
-                    if (Math.Abs(i - z.GetLength(0) / 2) >= settings.depths[settings.depths.Length - 1] ||
-                        Math.Abs(j - z.GetLength(1) / 2) >= settings.depths[settings.depths.Length - 1])
+                    if (Math.Abs(i - z.GetLength(0) / 2) >= Settings.depths[Settings.depths.Length - 1] ||
+                        Math.Abs(j - z.GetLength(1) / 2) >= Settings.depths[Settings.depths.Length - 1])
                     {
                         mapViewer.RenderDynamicChunk(z[i, j],
                             mapViewer.GetViewInfo(CurArea).LeftDownPos +
-                            new Vector3((j - z.GetLength(1) / 2) * (int)settings.chunkSize, 0, (z.GetLength(0) / 2 - i) * (int)settings.chunkSize));
+                            new Vector3((j - z.GetLength(1) / 2) * (int)Settings.chunkSize, 0, (z.GetLength(0) / 2 - i) * (int)Settings.chunkSize));
                     }
                     else
                     {
                         mapViewer.RenderStaticChunk(z[i, j],
                             mapViewer.GetViewInfo(CurArea).LeftDownPos +
-                            new Vector3((j - z.GetLength(1) / 2) * (int)settings.chunkSize, 0, (z.GetLength(0) / 2 - i) * (int)settings.chunkSize));
+                            new Vector3((j - z.GetLength(1) / 2) * (int)Settings.chunkSize, 0, (z.GetLength(0) / 2 - i) * (int)Settings.chunkSize));
                     }
                 }
         }
@@ -90,25 +96,25 @@ namespace Map.World
             {
                 ChunkViewInfo z = mapViewer.GetViewInfo(area.TopNeighbor);
                 if (z != null && z.LeftDownPos != null)
-                    return z.LeftDownPos + new Vector3(0, 0, -(int)settings.chunkSize);
+                    return z.LeftDownPos + new Vector3(0, 0, -(int)Settings.chunkSize);
             }
             if (area.RightNeighbor != null)
             {
                 ChunkViewInfo z = mapViewer.GetViewInfo(area.RightNeighbor);
                 if (z != null && z.LeftDownPos != null)
-                    return z.LeftDownPos + new Vector3(-(int)settings.chunkSize, 0, 0);
+                    return z.LeftDownPos + new Vector3(-(int)Settings.chunkSize, 0, 0);
             }
             if (area.DownNeighbor != null)
             {
                 ChunkViewInfo z = mapViewer.GetViewInfo(area.DownNeighbor);
                 if (z != null && z.LeftDownPos != null)
-                    return z.LeftDownPos + new Vector3(0, 0, (int)settings.chunkSize);
+                    return z.LeftDownPos + new Vector3(0, 0, (int)Settings.chunkSize);
             }
             if (area.LeftNeighbor != null)
             {
                 ChunkViewInfo z = mapViewer.GetViewInfo(area.LeftNeighbor);
                 if (z != null && z.LeftDownPos != null)
-                    return z.LeftDownPos + new Vector3((int)settings.chunkSize, 0, 0);
+                    return z.LeftDownPos + new Vector3((int)Settings.chunkSize, 0, 0);
             }
             return null;
         }
@@ -121,7 +127,7 @@ namespace Map.World
 
             Vector3 leftDownCorner = mapViewer.GetViewInfo(CurArea).LeftDownPos;
             Vector3 rigthTopCorner = leftDownCorner +
-                new Vector3((int)settings.chunkSize, 0, (int)settings.chunkSize);
+                new Vector3((int)Settings.chunkSize, 0, (int)Settings.chunkSize);
 
             // 4 - cur chunk, try find new cur chunk
             // 0 1 2
@@ -156,7 +162,8 @@ namespace Map.World
                     }
                 case 1:
                     {
-                        CurArea = CurArea.GetOrCreateTopNeighbor();
+                        CurArea.GetOrCreateTopNeighbor();
+                        CurCoord = CurCoord.Top;
                         break;
                     }
                 case 2:
@@ -165,12 +172,14 @@ namespace Map.World
                     }
                 case 3:
                     {
-                        CurArea = CurArea.GetOrCreateLeftNeighbor();
+                        CurArea.GetOrCreateLeftNeighbor();
+                        CurCoord = CurCoord.Left;
                         break;
                     }
                 case 5:
                     {
-                        CurArea = CurArea.GetOrCreateRightNeighbor();
+                        CurArea.GetOrCreateRightNeighbor();
+                        CurCoord = CurCoord.Right;
                         break;
                     }
                 case 6:
@@ -179,7 +188,8 @@ namespace Map.World
                     }
                 case 7:
                     {
-                        CurArea = CurArea.GetOrCreateDownNeighbor();
+                        CurArea.GetOrCreateDownNeighbor();
+                        CurCoord = CurCoord.Down;
                         break;
                     }
                 case 8:
@@ -187,7 +197,7 @@ namespace Map.World
                         break;
                     }
             }
-            generator.GenerateAround(CurArea, settings);
+            generator.GenerateAround(CurArea, Settings);
             RenderAround();
         }
     }

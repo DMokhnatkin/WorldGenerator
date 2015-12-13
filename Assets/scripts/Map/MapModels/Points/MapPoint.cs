@@ -12,6 +12,10 @@ namespace Map.MapModels.Points
 
         float _height = float.NaN;
 
+        public MapPointNatureConfig NatureConf { get; private set; }
+
+        public WaterErosionMapPointData WaterErosion { get; private set; }
+
         public float Height
         {
             get
@@ -27,11 +31,10 @@ namespace Map.MapModels.Points
             }
         }
 
-        public WaterErosionMapPointData WaterErosion { get; private set; }
-
         public MapPoint()
         {
             WaterErosion = new WaterErosionMapPointData();
+            NatureConf = new MapPointNatureConfig();
         }
 
         public bool IsGenerated

@@ -10,22 +10,22 @@ namespace Map.MapModels.Areas
     {
         public bool IsLeftTopChild
         {
-            get { return Parent.LeftTopChild == this; }
+            get { return Parent != null && Parent.LeftTopChild == this; }
         }
 
         public bool IsRightTopChild
         {
-            get { return Parent.RightTopChild == this; }
+            get { return Parent != null && Parent.RightTopChild == this; }
         }
 
         public bool IsLeftDownChild
         {
-            get { return Parent.LeftDownChild == this; }
+            get { return Parent != null && Parent.LeftDownChild == this; }
         }
 
         public bool IsRightDownChild
         {
-            get { return Parent.RightDownChild == this; }
+            get { return Parent != null && Parent.RightDownChild == this; }
         }
 
         internal int LeftTopPoint_Id { get; set; }
@@ -146,7 +146,7 @@ namespace Map.MapModels.Areas
         }
 
         public Area Parent { get; internal set; }
-        public AreaTree Collection { get; internal set; }
+        public AreaGrid Collection { get; internal set; }
 
         public Area LeftTopChild { get; internal set; }
         public Area RightTopChild { get; internal set; }
@@ -168,7 +168,7 @@ namespace Map.MapModels.Areas
             }
         }
 
-        internal Area(Area parent, AreaTree collection)
+        private Area(Area parent, AreaGrid collection)
         {
             this.Parent = parent;
             this.Collection = collection;
@@ -176,6 +176,58 @@ namespace Map.MapModels.Areas
             RightTopPoint_Id = -1;
             LeftDownPoint_Id = -1;
             RightDownPoint_Id = -1;
+        }
+
+        /// <summary>
+        /// Create area with specifed point ids. If point must be created set it null;
+        /// </summary>
+        internal Area(Area parent, 
+            AreaGrid collection, 
+            Area topNeighbor,
+            Area rightNeighbor,
+            Area downNeighbor,
+            Area leftNeighbor)
+        {
+            this.Parent = parent;
+            this.Collection = collection;
+            // Set all values to null
+            LeftTopPoint_Id = -1;
+            RightTopPoint_Id = -1;
+            LeftDownPoint_Id = -1;
+            RightDownPoint_Id = -1;
+
+            if (topNeighbor != null)
+            {
+                MakeVerticalNeighbors(topNeighbor, this);
+                LeftTopPoint_Id = topNeighbor.LeftDownPoint_Id;
+                RightTopPoint_Id = topNeighbor.RightDownPoint_Id;
+            }
+            if (rightNeighbor != null)
+            {
+                MakeHorizontalNeighbors(this, rightNeighbor);
+                RightTopPoint_Id = rightNeighbor.LeftTopPoint_Id;
+                RightDownPoint_Id = rightNeighbor.LeftDownPoint_Id;
+            }
+            if (downNeighbor != null)
+            {
+                MakeVerticalNeighbors(this, downNeighbor);
+                LeftDownPoint_Id = downNeighbor.LeftTopPoint_Id;
+                RightDownPoint_Id = downNeighbor.RightTopPoint_Id;
+            }
+            if (leftNeighbor != null)
+            {
+                MakeHorizontalNeighbors(leftNeighbor, this);
+                LeftTopPoint_Id = leftNeighbor.RightTopPoint_Id;
+                LeftDownPoint_Id = leftNeighbor.RightDownPoint_Id;
+            }
+            if (LeftTopPoint_Id == -1)
+                LeftTopPoint_Id = collection.points.Add(new MapPoint());
+            if (RightTopPoint_Id == -1)
+                RightTopPoint_Id = collection.points.Add(new MapPoint());
+            if (LeftDownPoint_Id == -1)
+                LeftDownPoint_Id = collection.points.Add(new MapPoint());
+            if (RightDownPoint_Id == -1)
+                RightDownPoint_Id = collection.points.Add(new MapPoint());
         }
 
         private void MakeVerticalNeighbors(Area top, Area down)

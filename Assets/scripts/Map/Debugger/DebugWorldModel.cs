@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using Map.MapModels;
 using Map.MapModels.Areas;
 using Map.World;
 using Map.MapModels.Extensions;
@@ -9,10 +8,9 @@ using Map.MapModels.Points;
 
 namespace Map.Debugger
 {
-    [RequireComponent(typeof(Landscape))]
     public class DebugWorldModel : MonoBehaviour
     {
-        Landscape land;
+        public Landscape land;
         LandscapeSettings sett;
 
         public float verticalGridOffset = 1.0f;
@@ -24,12 +22,6 @@ namespace Map.Debugger
         public bool drawPoints = false;
 
         public float pointRadius = 0.05f;
-
-        void Start()
-        {
-            land = GetComponent<Landscape>();
-            sett = GetComponent<LandscapeSettings>();
-        }
 
         void DrawArea(Area area, int depth, Vector3 leftTop)
         {
@@ -76,14 +68,14 @@ namespace Map.Debugger
         {
             if (enabled)
             {
+                if (!Application.isPlaying)
+                    return;
                 if (land == null)
-                    land = GetComponent<Landscape>();
+                    return;
                 if (sett == null)
-                    sett = GetComponent<LandscapeSettings>();
+                    sett = land.Settings;
 
                 if (land.CurArea == null)
-                    return;
-                if (land.mapViewer.GetViewInfo(land.CurArea) == null)
                     return;
 
                 int maxDepth = land.CurArea.CalcDepth();
@@ -106,7 +98,10 @@ namespace Map.Debugger
                 for (int i = 0; i < z.GetLength(0); i++)
                     for (int j = 0; j < z.GetLength(1); j++)
                     {
-                        Vector3 leftTop = land.mapViewer.GetViewInfo(land.CurArea).LeftDownPos +
+                        if (z[i, j] == null)
+                            continue;
+                        Vector3 leftTop = new Vector3((land.CurCoord.x - 0.5f) * (int)sett.chunkSize, 0,
+                            (land.CurCoord.y - 0.5f) * (int)sett.chunkSize) +
                             new Vector3((j - neighborsRadius) * (int)sett.chunkSize, 0, (neighborsRadius - i + 1) * (int)sett.chunkSize);
                         DrawArea(z[i, j], z[i, j].CalcDepth(), leftTop);
                     }
