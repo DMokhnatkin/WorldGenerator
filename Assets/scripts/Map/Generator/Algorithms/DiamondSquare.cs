@@ -341,7 +341,7 @@ namespace Map.Generator.Algorithms
             foreach (Area z in curLayer)
             {
                 if (!z.IsSubDivided)
-                    z.Subdivide();
+                    z.Divide();
                 if (!z.MiddlePt_Val.IsGenerated)
                     Square(z, appl);
 

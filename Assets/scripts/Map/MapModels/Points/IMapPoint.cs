@@ -1,10 +1,14 @@
 ﻿
 namespace Map.MapModels.Points
 {
-    interface IMapPoint
+    public interface IMapPoint
     {
         float Height { get; set; }
 
+        float HeightAfterWaterErosion { get; set; }
+
         bool IsGenerated { get; }
+
+        MapPointNatureConfig NatureConf { get; }
     }
 }

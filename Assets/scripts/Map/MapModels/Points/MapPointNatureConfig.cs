@@ -22,6 +22,15 @@ namespace Map.MapModels.Points
         /// </summary>
         public float slope;
         public short windy;
+        /// <summary>
+        /// How much water leaked
+        /// </summary>
+        public float flood = 0;
+
+#if DEBUG
+        // To which point flood was falled
+        public HashSet<IMapPoint> falledTo = new HashSet<IMapPoint>();
+#endif
 
         public MapPointNatureConfig()
         {

@@ -7,6 +7,7 @@ using Map.World;
 using Map.MapView.Textures;
 using Map.MapModels.Extensions;
 using Map.MapModels.Points;
+using Map.MapModels.Navigation.Points;
 
 namespace Map.MapView
 {
@@ -28,7 +29,7 @@ namespace Map.MapView
 
         private float[,] ToHeightMap(Area chunkArea)
         {
-            MapPoint[,] map = chunkArea.UnwrapPoints();
+            MapPointInLayer[,] map = chunkArea.UnwrapPoints();
             float[,] heights = new float[map.GetLength(0), map.GetLength(1)];
             for (int i = 0; i < map.GetLength(0); i++)
                 for (int j = 0; j < map.GetLength(1); j++)
@@ -104,7 +105,7 @@ namespace Map.MapView
             List<int> triangles = new List<int>();
             List<Vector2> uv = new List<Vector2>();
 
-            MapPoint[,] z = area.UnwrapPoints();
+            MapPointInLayer[,] z = area.UnwrapPoints();
             float edgeLength = (int)_settings.chunkSize / ((float)z.GetLength(0) - 1);
             for (int i = 0; i < z.GetLength(0); i++)
                 for (int j = 0; j < z.GetLength(1); j++)

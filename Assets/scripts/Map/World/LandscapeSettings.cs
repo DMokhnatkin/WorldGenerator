@@ -35,5 +35,10 @@ namespace Map.World
         public float height = 500;
 
         public byte[] depths = new byte[7];
+
+        public byte MaxDepth
+        {
+            get { return depths[depths.Length - 1]; }
+        }
     }
 }

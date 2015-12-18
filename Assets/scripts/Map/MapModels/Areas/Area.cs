@@ -415,21 +415,6 @@ namespace Map.MapModels.Areas
                 RightDownChild.LeftDownPoint_Id = Collection.points.Add(new MapPoint());
         }
 
-        /// <summary>
-        /// Subdivide into 4 nodes
-        /// </summary>
-        public void Subdivide()
-        {
-            if (LeftTopChild == null)
-                CreateLeftTopChild();
-            if (RightTopChild == null)
-                CreateRightTopChild();
-            if (LeftDownChild == null)
-                CreateLeftDownChild();
-            if (RightDownChild == null)
-                CreateRightDownChild();
-        }
-
         public void CreateTopNeighbor()
         {
             if (TopNeighbor != null)

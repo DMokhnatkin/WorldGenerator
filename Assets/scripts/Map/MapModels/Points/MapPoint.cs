@@ -41,5 +41,10 @@ namespace Map.MapModels.Points
         {
             get { return _generated; }
         }
+
+        public float HeightAfterWaterErosion
+        {
+            get; set;
+        }
     }
 }

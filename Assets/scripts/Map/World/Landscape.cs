@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Map.MapModels;
-using Map.Generator.Algorithms;
+using Map.Generator.Algorithms.Erosion;
 using Map.MapView;
 using System.Linq;
 using Map.MapModels.Areas;
@@ -61,6 +61,9 @@ namespace Map.World
             mapViewer.RenderStaticChunk(CurArea,
                 new Vector3(player.transform.position.x, 0, player.transform.position.z) +
                 new Vector3(-(int)Settings.chunkSize / 2.0f, 0, -(int)Settings.chunkSize / 2.0f));
+
+            WaterErosion wt = new WaterErosion();
+            wt.CalcErosionStrength(CurArea, ((int)Settings.chunkSize) / (float)Settings.MaxDepth);
             RenderAround();
         }
 

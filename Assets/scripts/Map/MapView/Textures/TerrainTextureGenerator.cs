@@ -11,7 +11,7 @@ namespace Map.MapView.Textures
 {
     public class TerrainTextureGenerator
     {
-        public static void GenerateTerrainTexture(MapPoint[,] points, TerrainData terrData, MapTextureSettings sett)
+        public static void GenerateTerrainTexture(IMapPoint[,] points, TerrainData terrData, MapTextureSettings sett)
         {
             terrData.splatPrototypes = sett.GetSplatPrototypes();
             terrData.alphamapResolution = points.GetLength(0);
