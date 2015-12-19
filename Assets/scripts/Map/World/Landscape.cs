@@ -6,6 +6,7 @@ using Map.Generator.Algorithms.Erosion;
 using Map.MapView;
 using System.Linq;
 using Map.MapModels.Areas;
+using Map.MapModels.Seismic;
 
 namespace Map.World
 {
@@ -38,6 +39,8 @@ namespace Map.World
         public LandscapeSettings Settings { get; private set; }
 
         public AreaGrid MapModel { get { return mapModel; } }
+
+        public SeismicMap seismicMap = new SeismicMap(3, 0.01f);
 
         public Vector3 CurAreaLeftDownPos
         {
