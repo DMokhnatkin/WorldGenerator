@@ -1,9 +1,8 @@
-﻿using Map.MapModels.CompressedTable;
-using Map.Generator.Algorithms.PerlinNoise;
-using System;
+﻿using System;
 using Map.MapModels.Common;
 using System.Collections.Generic;
 using System.Collections;
+using Map.Generator.Algorithms.PerlinNoise;
 
 namespace Map.MapModels.Seismic
 {

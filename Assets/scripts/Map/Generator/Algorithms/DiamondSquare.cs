@@ -5,6 +5,7 @@ using Map.Generator.Geometry;
 using Map.MapModels.Areas;
 using Map.MapModels.Points;
 using Map.MapModels.Navigation.Points;
+using Map.MapModels.Seismic;
 
 namespace Map.Generator.Algorithms
 {
@@ -17,6 +18,7 @@ namespace Map.Generator.Algorithms
         public float harshness = 0.05f;
         public float maxHeight = 1;
         public float chunkSize;
+        
 
         System.Random rand = new System.Random();
 
@@ -28,6 +30,8 @@ namespace Map.Generator.Algorithms
 
         // To store generated areas for extend resolution
         Dictionary<Area, Queue<Area>> cash = new Dictionary<Area, Queue<Area>>();
+
+        private SeismicMap seismicMap;
 
         // To delete already generated areas from queue
         private byte _maxDepth;
