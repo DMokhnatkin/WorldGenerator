@@ -2,82 +2,65 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using Map.MapModels.WorldModel;
 
 namespace Map.World
 {
-    [RequireComponent(typeof(WorldDetalizationSettings))]
     public class WorldInstance : MonoBehaviour
     {
+        /// <summary>
+        /// Last model coordinate, when world was updated
+        /// </summary>
+        public Coord LastWorldUpdatedCoord { get; private set; }
+
         public GameObject player;
 
-        Coord curCell;
-        Navigator navigator;
+        public WorldModel model = new WorldModel(7);
 
-        #region Cash components
-        private WorldDetalizationSettings _detalizationSettings;
-        #endregion
+        public ModelCoordToGlobalTransformer ModelCoordToGlobalCoord { get; private set; }
 
-        void Start()
+        /// <summary>
+        /// Coordinate of current model point 
+        /// </summary>
+        public Coord CurModelCoord
         {
-            _detalizationSettings = GetComponent<WorldDetalizationSettings>();
-            navigator = new Navigator(new Vector2(0, 0), _detalizationSettings.baseCellSize);
+            get
+            {
+                return ModelCoordToGlobalCoord.GlobalCoordToModel(
+                       new Vector2(player.transform.position.x, player.transform.position.z));
+            }
         }
 
-        void ReDraw()
+        /// <summary>
+        /// Current model point
+        /// </summary>
+        public WorldPoint CurModelPoint
         {
-
+            get { return model.GetOrCreatePoint(CurModelCoord); }
         }
 
-        void MoveTop()
+        void Awake()
         {
-            curCell = curCell.Top;
-            ReDraw();
+            ModelCoordToGlobalCoord = new ModelCoordToGlobalTransformer(model, new Vector2(0, 0), 1f);
+            UpdateWorld();
         }
 
-        void MoveRight()
+        void UpdateWorld()
         {
-            curCell = curCell.Right;
-            ReDraw();
-        }
-
-        void MoveDown()
-        {
-            curCell = curCell.Down;
-            ReDraw();
-        }
-
-        void MoveLeft()
-        {
-            curCell = curCell.Left;
-            ReDraw();
+            PointNavigation.CreateAround(model, 
+                model.GetMaxDetalizationLayer(), 
+                CurModelPoint, 
+                10f);
+            LastWorldUpdatedCoord = CurModelCoord;
         }
 
         void Update()
         {
-            Vector2 pos = new Vector2(transform.position.x, transform.position.z);
-            int t = navigator.CellContains(pos, curCell);
-            if (t != 0)
+            Coord curCoord = ModelCoordToGlobalCoord.GlobalCoordToModel(new Vector2(player.transform.position.x, 
+                player.transform.position.z));
+            if (!curCoord.Equals(LastWorldUpdatedCoord))
             {
-                if (t == 1)
-                {
-                    MoveTop();
-                    return;
-                }
-                if (t == 2)
-                {
-                    MoveRight();
-                    return;
-                }
-                if (t == 3)
-                {
-                    MoveDown();
-                    return;
-                }
-                if (t == 4)
-                {
-                    MoveLeft();
-                    return;
-                }
+                UpdateWorld();
             }
         }
     }
