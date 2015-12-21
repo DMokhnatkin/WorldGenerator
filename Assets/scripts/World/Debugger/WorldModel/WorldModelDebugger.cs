@@ -5,6 +5,7 @@ using World.Model.PointCollections;
 
 namespace World.Debugger.WorldModel
 {
+    [RequireComponent(typeof(WorldModelDebuggerSettings))]
     public class WorldModelDebugger : MonoBehaviour
     {
         public WorldInstance worldInstance;
@@ -14,11 +15,14 @@ namespace World.Debugger.WorldModel
         public float radius = 5.0f;
 
         public const float ptRadius = 0.1f;
-        public Color ptColor = Color.green; 
+        public Color ptColor = Color.green;
+
+        private WorldModelDebuggerSettings settings;
 
         void Start()
         {
-            detalization = worldInstance.model.GetMaxDetalizationLayer().Detalization;
+            detalization = worldInstance.Model.MaxDetalizationLayer.Detalization;
+            settings = GetComponent<WorldModelDebuggerSettings>();
         }
 
         void DrawPoint(Vector3 pos)
@@ -29,18 +33,20 @@ namespace World.Debugger.WorldModel
 
         void OnDrawGizmos()
         {
+            if (!enabled)
+                return;
             if (worldInstance == null)
                 return;
             if (!Application.isPlaying)
                 return;
-            var pts = PointNavigation.GetAround(worldInstance.model,
-                worldInstance.model.GetLayer(detalization), 
+            var pts = PointNavigation.GetAround(worldInstance.Model,
+                worldInstance.Model.GetLayer(detalization), 
                 worldInstance.CurModelPoint,
-                radius);
-            foreach (WorldPoint pt in pts)
+                worldInstance.Model.CoordTransformer.GlobalDistToModel(radius, worldInstance.Model.GetLayer(detalization)));
+            foreach (ModelPoint pt in pts)
             {
-                Vector2 pos = worldInstance.model.GetCoordTransformer(1.0f).ModelCoordToGlobal(pt.NormalCoord);
-                Vector3 pos3 = new Vector3(pos.x, pt.Data.height * 10, pos.y);
+                Vector2 pos = worldInstance.Model.CoordTransformer.ModelCoordToGlobal(pt.NormalCoord);
+                Vector3 pos3 = new Vector3(pos.x, pt.Data.height * settings.height, pos.y);
                 DrawPoint(pos3);
             }
         }

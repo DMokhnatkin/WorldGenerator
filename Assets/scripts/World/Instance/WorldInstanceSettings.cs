@@ -3,11 +3,13 @@ using UnityEngine;
 
 namespace World.Instance
 {
-    public class WorldDetalizationSettings : MonoBehaviour
+    public class WorldInstanceSettings : MonoBehaviour
     {
         public List<float> _detalizations = new List<float>();
 
         public float baseCellSize = 1f;
+
+        public float generateRadius = 10f;
 
         private int SearchDetalizationCoeff(float dist)
         {

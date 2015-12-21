@@ -1,7 +1,7 @@
 ﻿
 namespace World.Model
 {
-    public class WorldPointData
+    public class ModelPointData
     {
         public float height = 0;
     }

@@ -23,15 +23,15 @@ namespace World.Model
         /// </summary>
         public int CoordOffset
         {
-            get { return Pow2.GetPow2(WorldGrid.MaxChunkDetalization - Detalization); }
+            get { return Pow2.GetPow2(WorldGrid.DetalizationLayerCount - Detalization); }
         }
 
         /// <summary>
         /// Transform coordinates from layer to normal form
         /// </summary>
-        public Coord LayerToNormal(Coord coord)
+        public ModelCoord LayerToNormal(ModelCoord coord)
         {
-            return new Coord(coord.x * CoordOffset, coord.y * CoordOffset);
+            return new ModelCoord(coord.x * CoordOffset, coord.y * CoordOffset);
         }
 
         internal WorldModelLayer(WorldModel worldGrid, int detalization = 0)

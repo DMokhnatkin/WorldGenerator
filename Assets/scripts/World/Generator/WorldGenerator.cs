@@ -1,13 +1,16 @@
 ﻿using World.Model;
 using World.Model.PointCollections;
 using World.Generator.Algorithms.PerlinNoise;
+using System.Collections;
 
 namespace World.Generator
 {
     public class WorldGenerator
     {
+        const float BASE_HARSHNESS = 1f; // For better harshness representation
         public int octaves = 3;
         public const float eps = 0.01f;
+        public float harshness = 500f;
 
         Perlin2D perlin2d;
         WorldModel model;
@@ -22,10 +25,10 @@ namespace World.Generator
         /// Generate single point data
         /// </summary>
         /// <param name="pt"></param>
-        private void GeneratePoint(WorldPoint pt)
+        private void GeneratePoint(ModelPoint pt)
         {
-            pt.Data.height = perlin2d.Noise(model.GetCoordTransformer(1.0f).ModelCoordToGlobal(pt.NormalCoord).x + eps,
-                model.GetCoordTransformer(1.0f).ModelCoordToGlobal(pt.NormalCoord).y + eps, octaves);
+            pt.Data.height = perlin2d.Noise(pt.NormalCoord.x / (harshness * BASE_HARSHNESS) + eps,
+                pt.NormalCoord.y / (harshness * BASE_HARSHNESS) + eps, octaves);
         }
 
         /// <summary>
@@ -33,7 +36,7 @@ namespace World.Generator
         /// </summary>
         public void Generate(IWorldPointCollection toGenerate)
         {
-            foreach (WorldPoint z in toGenerate)
+            foreach (ModelPoint z in toGenerate)
             {
                 GeneratePoint(z);
             }

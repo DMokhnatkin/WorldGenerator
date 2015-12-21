@@ -10,17 +10,29 @@ namespace World.Model
         /// How much times chunk can be divided 
         /// (each divide increase point count in chunk)
         /// </summary>
-        public int MaxChunkDetalization { get; private set; }
+        public int DetalizationLayerCount { get; private set; }
 
         /// <summary>
         /// All points and their coordinates
         /// </summary>
-        Dictionary<Coord, WorldPoint> Points { get; set; }
+        Dictionary<ModelCoord, ModelPoint> Points { get; set; }
+
+        /// <summary>
+        /// Transform model coordinates to global(Unity) and back
+        /// </summary>
+        public ModelCoordToGlobalTransformer CoordTransformer { get; private set; }
+
+        public WorldModel(int detalizationLayerCount, float modelUnitWidth)
+        {
+            DetalizationLayerCount = detalizationLayerCount;
+            Points = new Dictionary<ModelCoord, ModelPoint>();
+            CoordTransformer = new ModelCoordToGlobalTransformer(this, modelUnitWidth);
+        }
 
         /// <summary>
         /// Get point by normal coord. If point isn't exists return null
         /// </summary>
-        public WorldPoint GetPoint(Coord normalCoord)
+        public ModelPoint GetPoint(ModelCoord normalCoord)
         {
             if (Points.ContainsKey(normalCoord))
                 return Points[normalCoord];
@@ -33,9 +45,9 @@ namespace World.Model
         /// <param name="coord"></param>
         /// <param name="layer"></param>
         /// <returns></returns>
-        public WorldPoint GetPoint(Coord coord, WorldModelLayer layer)
+        public ModelPoint GetPoint(ModelCoord coord, WorldModelLayer layer)
         {
-            Coord normalCoord = layer.LayerToNormal(coord);
+            ModelCoord normalCoord = layer.LayerToNormal(coord);
             if (Points.ContainsKey(normalCoord))
                 return Points[normalCoord];
             return null;
@@ -45,20 +57,20 @@ namespace World.Model
         /// Create point by normal coord
         /// </summary>
         /// <exception cref="ArgumentException">Point is already created</exception>
-        public WorldPoint CreatePoint(Coord normalCoord)
+        public ModelPoint CreatePoint(ModelCoord normalCoord)
         {
             if (Points.ContainsKey(normalCoord))
                 throw new ArgumentException(String.Format("Point with coord {0} already created", normalCoord.ToString()));
-            Points.Add(normalCoord, new WorldPoint(normalCoord));
+            Points.Add(normalCoord, new ModelPoint(normalCoord));
             return Points[normalCoord];
         }
 
-        public WorldPoint CreatePoint(Coord coord, WorldModelLayer layer)
+        public ModelPoint CreatePoint(ModelCoord coord, WorldModelLayer layer)
         {
-            Coord normalCoord = layer.LayerToNormal(coord);
+            ModelCoord normalCoord = layer.LayerToNormal(coord);
             if (Points.ContainsKey(normalCoord))
                 throw new ArgumentException(String.Format("Point with coord(normal) {0} already created", normalCoord.ToString()));
-            Points.Add(normalCoord, new WorldPoint(normalCoord));
+            Points.Add(normalCoord, new ModelPoint(normalCoord));
             return Points[normalCoord];
         }
 
@@ -66,7 +78,7 @@ namespace World.Model
         /// If point exists return it.
         /// If point isn't exists create it and then return 
         /// </summary>
-        public WorldPoint GetOrCreatePoint(Coord normalCoord)
+        public ModelPoint GetOrCreatePoint(ModelCoord normalCoord)
         {
             if (!Points.ContainsKey(normalCoord))
                 return CreatePoint(normalCoord);
@@ -74,25 +86,14 @@ namespace World.Model
                 return GetPoint(normalCoord);
         }
 
-        public WorldModel(int maxChunkDetalization)
-        {
-            MaxChunkDetalization = maxChunkDetalization;
-            Points = new Dictionary<Coord, WorldPoint>();
-        }
-
         public WorldModelLayer GetLayer(int detalization)
         {
             return new WorldModelLayer(this, detalization);
         }
 
-        public WorldModelLayer GetMaxDetalizationLayer()
+        public WorldModelLayer MaxDetalizationLayer
         {
-            return new WorldModelLayer(this, MaxChunkDetalization);
-        }
-
-        public ModelCoordToGlobalTransformer GetCoordTransformer(float modelUnitWidth)
-        {
-            return new ModelCoordToGlobalTransformer(this, modelUnitWidth);
+            get { return new WorldModelLayer(this, DetalizationLayerCount); }
         }
     }
 }

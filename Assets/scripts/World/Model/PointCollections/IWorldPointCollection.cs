@@ -4,8 +4,8 @@ using World.Model;
 
 namespace World.Model.PointCollections
 {
-    public interface IWorldPointCollection : IEnumerable<WorldPoint>
+    public interface IWorldPointCollection : IEnumerable<ModelPoint>
     {
-
+        IEnumerable<ModelPointTriangle> GetTriangles();
     }
 }
