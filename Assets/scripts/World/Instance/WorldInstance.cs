@@ -79,11 +79,10 @@ namespace World.Instance
         /// </summary>
         void UpdateWorld()
         {
-            PointNavigation.CreateAround(Model,
-                Model.MaxDetalizationLayer, 
+            PointNavigation.CreateAround(Model.MaxDetalizationLayer, 
                 CurModelPoint, 
                 Model.CoordTransformer.GlobalDistToModel(settings.generateRadius, Model.MaxDetalizationLayer));
-            var pts = PointNavigation.GetAround(Model, Model.MaxDetalizationLayer,
+            var pts = PointNavigation.GetAround(Model.MaxDetalizationLayer,
                     CurModelPoint,
                     Model.CoordTransformer.GlobalDistToModel(settings.generateRadius, Model.MaxDetalizationLayer));
             //generator.Generate(pts);

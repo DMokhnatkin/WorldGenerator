@@ -7,15 +7,14 @@ namespace World.Model
     public class WorldModel
     {
         /// <summary>
-        /// How much times chunk can be divided 
-        /// (each divide increase point count in chunk)
+        /// Layers of detalization
         /// </summary>
-        public int DetalizationLayerCount { get; private set; }
+        WorldModelLayer[] detalizationLayers;
 
         /// <summary>
-        /// All points and their coordinates
+        /// All points and their normal coordinates
         /// </summary>
-        Dictionary<ModelCoord, ModelPoint> Points { get; set; }
+        internal Dictionary<ModelCoord, ModelPoint> Points { get; set; }
 
         /// <summary>
         /// Transform model coordinates to global(Unity) and back
@@ -24,52 +23,65 @@ namespace World.Model
 
         public WorldModel(int detalizationLayerCount, float modelUnitWidth)
         {
-            DetalizationLayerCount = detalizationLayerCount;
+            detalizationLayers = new WorldModelLayer[detalizationLayerCount];
+            // Reverse because we use maxDetalizationLayer to initialize other layers(we calculate lauer offset using int) 
+            for (int i = detalizationLayerCount - 1; i >= 0; i--)
+                detalizationLayers[i] = new WorldModelLayer(this, i);
             Points = new Dictionary<ModelCoord, ModelPoint>();
             CoordTransformer = new ModelCoordToGlobalTransformer(this, modelUnitWidth);
         }
 
         /// <summary>
-        /// Get point by normal coord. If point isn't exists return null
+        /// Get layer with max detalization(in this layer layerCoord = normlalCoord)
         /// </summary>
-        public ModelPoint GetPoint(ModelCoord normalCoord)
+        public WorldModelLayer MaxDetalizationLayer
         {
-            if (Points.ContainsKey(normalCoord))
-                return Points[normalCoord];
-            return null;
+            get { return detalizationLayers[detalizationLayers.Length - 1]; }
         }
 
         /// <summary>
-        /// Get point by layer and coordinates in it. If point isn't exists return null.
+        /// Get layer max detalization
         /// </summary>
-        /// <param name="coord"></param>
-        /// <param name="layer"></param>
-        /// <returns></returns>
-        public ModelPoint GetPoint(ModelCoord coord, WorldModelLayer layer)
+        public int MaxDetalization
         {
-            ModelCoord normalCoord = layer.LayerToNormal(coord);
-            if (Points.ContainsKey(normalCoord))
-                return Points[normalCoord];
-            return null;
+            get { return detalizationLayers.Length - 1; }
         }
 
         /// <summary>
-        /// Create point by normal coord
+        /// Get detalization layer by it's detalization coefficient
         /// </summary>
-        /// <exception cref="ArgumentException">Point is already created</exception>
+        public WorldModelLayer GetLayer(int detalizationLayer)
+        {
+            if (detalizationLayer >= detalizationLayers.Length)
+                throw new ArgumentException("There is no detalization layer " + detalizationLayer);
+            return detalizationLayers[detalizationLayer];
+        }
+
+        /// <summary>
+        /// Does model contains point with specifed normal coord
+        /// </summary>
+        public bool Contains(ModelCoord normalCoord)
+        {
+            return (Points.ContainsKey(normalCoord));
+        }
+
+        /// <summary>
+        /// Get of set modelPoint by normal coordinate(coordinate in max layer detalization) 
+        /// </summary>
+        public ModelPoint this[ModelCoord normalCoord]
+        {
+            get
+            {
+                if (Points.ContainsKey(normalCoord))
+                    return Points[normalCoord];
+                return null;
+            }
+        }
+
         public ModelPoint CreatePoint(ModelCoord normalCoord)
         {
             if (Points.ContainsKey(normalCoord))
-                throw new ArgumentException(String.Format("Point with coord {0} already created", normalCoord.ToString()));
-            Points.Add(normalCoord, new ModelPoint(normalCoord));
-            return Points[normalCoord];
-        }
-
-        public ModelPoint CreatePoint(ModelCoord coord, WorldModelLayer layer)
-        {
-            ModelCoord normalCoord = layer.LayerToNormal(coord);
-            if (Points.ContainsKey(normalCoord))
-                throw new ArgumentException(String.Format("Point with coord(normal) {0} already created", normalCoord.ToString()));
+                throw new ArgumentException(String.Format("Point {0} already created", normalCoord.ToString()));
             Points.Add(normalCoord, new ModelPoint(normalCoord));
             return Points[normalCoord];
         }
@@ -82,18 +94,7 @@ namespace World.Model
         {
             if (!Points.ContainsKey(normalCoord))
                 return CreatePoint(normalCoord);
-            else
-                return GetPoint(normalCoord);
-        }
-
-        public WorldModelLayer GetLayer(int detalization)
-        {
-            return new WorldModelLayer(this, detalization);
-        }
-
-        public WorldModelLayer MaxDetalizationLayer
-        {
-            get { return new WorldModelLayer(this, DetalizationLayerCount); }
+            return this[normalCoord];
         }
     }
 }

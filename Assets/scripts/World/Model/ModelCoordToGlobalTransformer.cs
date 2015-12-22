@@ -48,7 +48,7 @@ namespace World.Model
         /// </summary>
         public float GlobalDistToModel(float dist, WorldModelLayer layer)
         {
-            return dist / (ModelUnitWidth * Pow2.GetPow2(layer.WorldGrid.DetalizationLayerCount - layer.Detalization));
+            return dist / (ModelUnitWidth * Pow2.GetPow2(layer.WorldModel.MaxDetalizationLayer.Detalization - layer.Detalization));
         }
     }
 }

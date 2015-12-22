@@ -15,13 +15,13 @@ namespace World.Model
         public static ModelPoint RelativeOffset(WorldModel worldModel, WorldModelLayer layer, ModelPoint point, int offsetX, int offsetY)
         {
             ModelCoord coord = new ModelCoord(point.NormalCoord.x + layer.CoordOffset * offsetX, point.NormalCoord.y + layer.CoordOffset * offsetY);
-            return worldModel.GetPoint(coord);
+            return worldModel[coord];
         }
 
         /// <summary>
         /// Get points around specified point(distance is less then radius) 
         /// </summary>
-        public static WorldPointCollection GetAround(WorldModel worldModel, WorldModelLayer layer, ModelPoint point, float radius)
+        public static WorldPointCollection GetAround(WorldModelLayer layer, ModelPoint point, float radius)
         {
             WorldPointCollection res = new WorldPointCollection();
             float rad2 = radius * radius;
@@ -30,8 +30,8 @@ namespace World.Model
                 for (int y = -rad; y <= rad; y++)
                 {
                     if (x * x + y * y <= rad2)
-                        if (worldModel.GetPoint(new ModelCoord(x, y), layer) != null)
-                            res.Add(worldModel.GetPoint(new ModelCoord(x, y), layer));
+                        if (layer[new ModelCoord(x, y)] != null)
+                            res.Add(layer[new ModelCoord(x, y)]);
                 }
             return res;
         }
@@ -39,7 +39,7 @@ namespace World.Model
         /// <summary>
         /// Create not existing points around specified points
         /// </summary>
-        public static void CreateAround(WorldModel worldModel, WorldModelLayer layer, ModelPoint point, float radius)
+        public static void CreateAround(WorldModelLayer layer, ModelPoint point, float radius)
         {
             int rad = (int)radius;
             float rad2 = radius * radius;
@@ -47,8 +47,8 @@ namespace World.Model
                 for (int y = -rad; y <= rad; y++)
                 {
                     if (x * x + y * y <= rad2)
-                        if (worldModel.GetPoint(new ModelCoord(x, y), layer) == null)
-                            worldModel.CreatePoint(new ModelCoord(x, y), layer);
+                        if (!layer.Contains(new ModelCoord(x, y)))
+                            layer.CreatePoint(new ModelCoord(x, y));
                 }
         }
     }

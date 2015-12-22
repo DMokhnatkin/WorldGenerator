@@ -2,6 +2,7 @@
 using World.Instance;
 using World.Model;
 using World.Model.PointCollections;
+using UnityEditor;
 
 namespace World.Debugger.WorldModel
 {
@@ -14,7 +15,7 @@ namespace World.Debugger.WorldModel
 
         public float radius = 5.0f;
 
-        public const float ptRadius = 0.1f;
+        public const float ptRadius = 0.05f;
         public Color ptColor = Color.green;
 
         private WorldModelDebuggerSettings settings;
@@ -28,7 +29,7 @@ namespace World.Debugger.WorldModel
         void DrawPoint(Vector3 pos)
         {
             Gizmos.color = ptColor;
-            Gizmos.DrawSphere(pos, ptRadius);
+            Gizmos.DrawSphere(pos, HandleUtility.GetHandleSize(pos) * ptRadius);
         }
 
         void OnDrawGizmos()
@@ -39,8 +40,7 @@ namespace World.Debugger.WorldModel
                 return;
             if (!Application.isPlaying)
                 return;
-            var pts = PointNavigation.GetAround(worldInstance.Model,
-                worldInstance.Model.GetLayer(detalization), 
+            var pts = PointNavigation.GetAround(worldInstance.Model.GetLayer(detalization), 
                 worldInstance.CurModelPoint,
                 worldInstance.Model.CoordTransformer.GlobalDistToModel(radius, worldInstance.Model.GetLayer(detalization)));
             foreach (ModelPoint pt in pts)

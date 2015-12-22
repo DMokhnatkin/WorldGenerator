@@ -36,9 +36,8 @@ namespace World.Render
 
         private void PlayerMovedInModel(ModelCoord lastPos, ModelCoord newPos)
         {
-            var points = PointNavigation.GetAround(World.Model, 
-                World.Model.MaxDetalizationLayer, 
-                World.Model.GetPoint(newPos), 
+            var points = PointNavigation.GetAround(World.Model.MaxDetalizationLayer, 
+                World.Model[newPos], 
                 World.Model.CoordTransformer.GlobalDistToModel(renderSettings.radius, World.Model.MaxDetalizationLayer));
             var meshFilter = renderedObject.GetComponent<MeshFilter>();
             var meshRender = renderedObject.GetComponent<MeshRenderer>();
