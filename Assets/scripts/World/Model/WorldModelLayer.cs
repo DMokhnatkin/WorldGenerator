@@ -14,9 +14,10 @@ namespace World.Model
         public WorldModel WorldModel { get; private set; }
 
         /// <summary>
-        /// Detalization of chunks in this layer
+        /// Id of layer i.e.
+        /// detalization of model in this layer
         /// </summary>
-        public int Detalization { get; private set; }
+        public int Id { get; private set; }
 
         /// <summary>
         /// Get offset of coord for curent layer.
@@ -34,8 +35,8 @@ namespace World.Model
         internal WorldModelLayer(WorldModel worldModel, int detalization)
         {
             WorldModel = worldModel;
-            Detalization = detalization;
-            CoordOffset = Pow2.GetPow2(WorldModel.MaxDetalization - Detalization);
+            Id = detalization;
+            CoordOffset = Pow2.GetPow2(WorldModel.MaxDetalizationLayerId - Id);
         }
 
         /// <summary>

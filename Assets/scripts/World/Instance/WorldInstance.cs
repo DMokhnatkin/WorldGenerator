@@ -3,6 +3,7 @@ using UnityEngine;
 using System;
 using World.Model;
 using World.Generator;
+using World.Generator.Algorithms.DiamondSquare;
 
 namespace World.Instance
 {

@@ -22,7 +22,7 @@ namespace World.Debugger.WorldModel
 
         void Start()
         {
-            detalization = worldInstance.Model.MaxDetalizationLayer.Detalization;
+            detalization = worldInstance.Model.MaxDetalizationLayer.Id;
             settings = GetComponent<WorldModelDebuggerSettings>();
         }
 

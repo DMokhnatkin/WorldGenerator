@@ -42,7 +42,7 @@ namespace World.Model
         /// <summary>
         /// Get layer max detalization
         /// </summary>
-        public int MaxDetalization
+        public int MaxDetalizationLayerId
         {
             get { return detalizationLayers.Length - 1; }
         }
