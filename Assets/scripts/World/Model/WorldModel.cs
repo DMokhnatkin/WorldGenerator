@@ -19,7 +19,7 @@ namespace World.Model
         /// <summary>
         /// Transform model coordinates to global(Unity) and back
         /// </summary>
-        public ModelCoordToGlobalTransformer CoordTransformer { get; private set; }
+        public CoordTransformer CoordTransformer { get; private set; }
 
         public WorldModel(int detalizationLayerCount, float modelUnitWidth)
         {
@@ -28,7 +28,7 @@ namespace World.Model
             for (int i = detalizationLayerCount - 1; i >= 0; i--)
                 detalizationLayers[i] = new WorldModelLayer(this, i);
             Points = new Dictionary<ModelCoord, ModelPoint>();
-            CoordTransformer = new ModelCoordToGlobalTransformer(this, modelUnitWidth);
+            CoordTransformer = new CoordTransformer(this, modelUnitWidth);
         }
 
         /// <summary>

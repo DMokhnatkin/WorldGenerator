@@ -4,6 +4,7 @@ using System;
 using World.Model;
 using World.Generator;
 using World.Generator.Algorithms.DiamondSquare;
+using World.Model.Frames;
 
 namespace World.Instance
 {
@@ -80,12 +81,13 @@ namespace World.Instance
         /// </summary>
         void UpdateWorld()
         {
-            PointNavigation.CreateAround(Model.MaxDetalizationLayer, 
-                CurModelPoint, 
-                Model.CoordTransformer.GlobalDistToModel(settings.generateRadius, Model.MaxDetalizationLayer));
-            var pts = PointNavigation.GetAround(Model.MaxDetalizationLayer,
-                    CurModelPoint,
-                    Model.CoordTransformer.GlobalDistToModel(settings.generateRadius, Model.MaxDetalizationLayer));
+            float rad = Model.CoordTransformer.GlobalDistToModel(settings.generateRadius, Model.MaxDetalizationLayer);
+            int binRad = Pow2.CeilToPow2(rad);
+            // Nearest BinPlus1SquareFrame bigger then rad(transformed to model coords)
+            BinPlus1SquareFrame frame = new BinPlus1SquareFrame(new ModelCoord(-binRad, -binRad), 2 * binRad + 1);
+            PointNavigation.CreatePoints(frame, Model.MaxDetalizationLayer);
+            DiamondSquare sq = new DiamondSquare(Model);
+            sq.GenerateSingleFrame(frame);
             //generator.Generate(pts);
             LastWorldUpdatedCoord = CurModelCoord;
         }

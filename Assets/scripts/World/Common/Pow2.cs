@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace World.Common
 {
@@ -7,6 +8,8 @@ namespace World.Common
     /// </summary>
     public static class Pow2
     {
+        public const float SQRT_2 = 1.414213562373095f;
+
         static List<int> cashPow2 = new List<int>();
 
         static Dictionary<int, int> cashLog2 = new Dictionary<int, int>();
@@ -48,6 +51,14 @@ namespace World.Common
                 return cashLog2[val];
             else
                 return -1;
+        }
+
+        /// <summary>
+        /// Ceil float to nearest bigger step of 2
+        /// </summary>
+        public static int CeilToPow2(float val)
+        {
+            return GetPow2((int)Math.Ceiling(Math.Log(val, 2)));
         }
     }
 }

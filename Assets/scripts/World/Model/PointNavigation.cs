@@ -1,6 +1,8 @@
 ﻿using System;
 using World.Common;
 using World.Model.PointCollections;
+using World.Model.Frames;
+using World.Model;
 
 namespace World.Model
 {
@@ -50,6 +52,29 @@ namespace World.Model
                         if (!layer.Contains(new ModelCoord(x, y)))
                             layer.CreatePoint(new ModelCoord(x, y));
                 }
+        }
+
+        /// <summary>
+        /// Return BinSquareFrame with point in center
+        /// size = 2^radius + 1
+        /// </summary>
+        public static BinPlus1SquareFrame GetBinPlus1SquareFrame(ModelCoord pointCoord, int radius)
+        {
+            if (Pow2.GetLog2(radius) == -1)
+                throw new ArgumentException("Radius must 2^n");
+            return new BinPlus1SquareFrame(
+                new ModelCoord(pointCoord.x - radius, pointCoord.y - radius),
+                2 * radius + 1);
+        }
+
+        /// <summary>
+        /// Create points in specifed frame
+        /// </summary>
+        public static void CreatePoints(BinPlus1SquareFrame frame, WorldModelLayer layer)
+        {
+            foreach (ModelCoord coord in frame.GetCoords())
+                if (!layer.Contains(coord))
+                    layer.CreatePoint(coord);
         }
     }
 }

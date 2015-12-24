@@ -6,9 +6,9 @@ using World.Model;
 namespace World.Model
 {
     /// <summary>
-    /// Transform WorldModel coordinates to global(Unity) coordinates
+    /// Transform WorldModel coordinates to global(Unity) coordinates and back
     /// </summary>
-    public class ModelCoordToGlobalTransformer
+    public class CoordTransformer
     {
         /// <summary>
         /// Model
@@ -20,7 +20,7 @@ namespace World.Model
         /// </summary>
         public float ModelUnitWidth { get; private set; }
 
-        public ModelCoordToGlobalTransformer(WorldModel model, float modelUnitWidth)
+        public CoordTransformer(WorldModel model, float modelUnitWidth)
         {
             Model = model;
             ModelUnitWidth = modelUnitWidth;
@@ -49,6 +49,14 @@ namespace World.Model
         public float GlobalDistToModel(float dist, WorldModelLayer layer)
         {
             return dist / (ModelUnitWidth * Pow2.GetPow2(layer.WorldModel.MaxDetalizationLayer.Id - layer.Id));
+        }
+
+        /// <summary>
+        /// Transform model distance if specifed layer to global(Unity) distance
+        /// </summary>
+        public float ModelDistToGlobal(float dist, WorldModelLayer layer)
+        {
+            return (ModelUnitWidth * Pow2.GetPow2(layer.WorldModel.MaxDetalizationLayer.Id - layer.Id)) * dist;
         }
     }
 }

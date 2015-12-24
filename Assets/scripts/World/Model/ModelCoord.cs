@@ -52,5 +52,10 @@ namespace World.Model
         {
             get { return new ModelCoord(x - 1, y); }
         }
+
+        public override string ToString()
+        {
+            return x + " " + y;
+        }
     }
 }
