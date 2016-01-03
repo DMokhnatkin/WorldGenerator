@@ -7,28 +7,14 @@ namespace World.Model.Frames
     /// <summary>
     /// Square frame with size = 2^n + 1
     /// </summary>
-    public class BinPlus1SquareFrame
+    public class BinPlus1SquareFrame : SquareFrame
     {
-        public ModelCoord LeftDown { get; private set; }
-        public int Size { get; private set; }
-
-        public BinPlus1SquareFrame(ModelCoord leftDown, int size)
+        public BinPlus1SquareFrame(ModelCoord leftDown, int size) : base(leftDown, size)
         {
             if (Pow2.GetLog2(size - 1) == -1)
                 throw new ArgumentException("Size must be 2^n + 1");
-            LeftDown = leftDown;
-            Size = size;
         }
-
-        public IEnumerable<ModelCoord> GetCoords()
-        {
-            for (int x = LeftDown.x; x <= LeftDown.x + Size; x++)
-                for (int y = LeftDown.y; y <= LeftDown.y + Size; y++)
-                {
-                    yield return new ModelCoord(x, y);
-                }
-        }
-
+        
         /// <summary>
         /// Get center coord of frame
         /// </summary>
@@ -93,10 +79,5 @@ namespace World.Model.Frames
         /// Get right down quarter of frame
         /// </summary>
         public BinPlus1SquareFrame RightDownQuarter { get { return new BinPlus1SquareFrame(DownEdgeCenter, Size / 2 + 1); } }
-
-        public override string ToString()
-        {
-            return LeftDown.ToString() + " size = " + Size;
-        }
     }
 }

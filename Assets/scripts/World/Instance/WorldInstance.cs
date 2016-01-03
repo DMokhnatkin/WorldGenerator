@@ -20,7 +20,7 @@ namespace World.Instance
         /// Last model coordinate, when world was updated.
         /// If current coord is not equals it we must update world
         /// </summary>
-        public ModelCoord LastWorldUpdatedCoord { get; private set; }
+        public ModelCoord LastCoord { get; private set; }
 
         /// <summary>
         /// Player object. World will be generated and rendered around it.
@@ -72,7 +72,7 @@ namespace World.Instance
             settings = GetComponent<WorldInstanceSettings>();
             Model = new WorldModel(7, settings.baseCellSize);
             generator = new WorldGenerator(Model);
-            UpdateWorld();
+            LastCoord = CurModelCoord;
         }
 
         /// <summary>
@@ -86,23 +86,22 @@ namespace World.Instance
             // Nearest BinPlus1SquareFrame bigger then rad(transformed to model coords)
             BinPlus1SquareFrame frame = new BinPlus1SquareFrame(new ModelCoord(-binRad, -binRad), 2 * binRad + 1);
             PointNavigation.CreatePoints(frame, Model.MaxDetalizationLayer);
-            DiamondSquare sq = new DiamondSquare(Model);
-            sq.GenerateSingleFrame(frame);
-            //generator.Generate(pts);
-            LastWorldUpdatedCoord = CurModelCoord;
+            //DiamondSquare sq = new DiamondSquare(Model);
+            //sq.GenerateSingleFrame(frame);
+            generator.Generate(frame);
+            LastCoord = CurModelCoord;
         }
 
         void Update()
         {
-            ModelCoord lastCoord = LastWorldUpdatedCoord;
             ModelCoord curCoord = Model.CoordTransformer.GlobalCoordToModel(new Vector2(player.transform.position.x, 
                 player.transform.position.z));
-            if (!curCoord.Equals(lastCoord))
+            if (!curCoord.Equals(LastCoord))
             {
-                UpdateWorld();
                 var playerMoved = PlayerMovedInModel;
                 if (playerMoved != null)
-                    playerMoved(lastCoord, curCoord);
+                    playerMoved(LastCoord, curCoord);
+                LastCoord = curCoord;
             }
         }
     }

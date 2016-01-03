@@ -6,19 +6,19 @@ using UnityEditor;
 
 namespace World.Debugger.WorldModel
 {
-    [RequireComponent(typeof(WorldModelDebuggerSettings))]
     public class WorldModelDebugger : MonoBehaviour
     {
         public WorldInstance worldInstance;
 
         public int detalization = 1;
 
-        public float radius = 5.0f;
-
         public const float ptRadius = 0.05f;
-        public Color ptColor = Color.green;
+        public Color ptColor = Color.red;
 
-        private WorldModelDebuggerSettings settings;
+        /// <summary>
+        /// Settings for worldModelDebugger
+        /// </summary>
+        public WorldModelDebuggerSettings settings = new WorldModelDebuggerSettings();
 
         void Start()
         {
@@ -26,10 +26,14 @@ namespace World.Debugger.WorldModel
             settings = GetComponent<WorldModelDebuggerSettings>();
         }
 
-        void DrawPoint(Vector3 pos)
+        void DrawPoint(Vector3 pos, ModelCoord coord)
         {
             Gizmos.color = ptColor;
             Gizmos.DrawSphere(pos, HandleUtility.GetHandleSize(pos) * ptRadius);
+            if (settings.drawPointCoords)
+            {
+                Handles.Label(pos, coord.ToString());
+            }
         }
 
         void OnDrawGizmos()
@@ -40,14 +44,15 @@ namespace World.Debugger.WorldModel
                 return;
             if (!Application.isPlaying)
                 return;
-            var pts = PointNavigation.GetAround(worldInstance.Model.GetLayer(detalization), 
-                worldInstance.CurModelPoint,
-                worldInstance.Model.CoordTransformer.GlobalDistToModel(radius, worldInstance.Model.GetLayer(detalization)));
-            foreach (ModelPoint pt in pts)
+            var frame = PointNavigation.GetAround(worldInstance.CurModelCoord,
+                settings.radius);
+            foreach (ModelCoord z in frame.GetCoords())
             {
-                Vector2 pos = worldInstance.Model.CoordTransformer.ModelCoordToGlobal(pt.NormalCoord);
-                Vector3 pos3 = new Vector3(pos.x, pt.Data.height * settings.height, pos.y);
-                DrawPoint(pos3);
+                if (!worldInstance.Model.Contains(z))
+                    continue;
+                Vector2 pos = worldInstance.Model.CoordTransformer.ModelCoordToGlobal(z);
+                Vector3 pos3 = new Vector3(pos.x, worldInstance.Model[z].Data.height * settings.height, pos.y);
+                DrawPoint(pos3, z);
             }
         }
     }

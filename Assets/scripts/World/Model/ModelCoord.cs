@@ -33,21 +33,33 @@ namespace World.Model
             return obj.GetHashCode();
         }
 
+        /// <summary>
+        /// Top neighbor
+        /// </summary>
         public ModelCoord Top
         {
             get { return new ModelCoord(x, y + 1); }
         }
 
+        /// <summary>
+        /// Right neighbor
+        /// </summary>
         public ModelCoord Right
         {
             get { return new ModelCoord(x + 1, y); }
         }
 
+        /// <summary>
+        /// Down neighbor
+        /// </summary>
         public ModelCoord Down
         {
             get { return new ModelCoord(x, y - 1); }
         }
 
+        /// <summary>
+        /// Left neighbor
+        /// </summary>
         public ModelCoord Left
         {
             get { return new ModelCoord(x - 1, y); }

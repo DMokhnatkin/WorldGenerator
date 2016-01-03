@@ -68,6 +68,16 @@ namespace World.Model
         }
 
         /// <summary>
+        /// Get square frame around specifed point
+        /// </summary>
+        public static SquareFrame GetAround(ModelCoord pointCoord, int radius)
+        {
+            return new SquareFrame(
+                new ModelCoord(pointCoord.x - radius, pointCoord.y - radius),
+                2 * radius + 1);
+        }
+
+        /// <summary>
         /// Create points in specifed frame
         /// </summary>
         public static void CreatePoints(BinPlus1SquareFrame frame, WorldModelLayer layer)

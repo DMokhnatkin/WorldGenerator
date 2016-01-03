@@ -1,10 +1,16 @@
 ﻿using UnityEngine;
+using System;
 
 namespace World.Render
 {
-    public class RenderSettings : MonoBehaviour
+    [Serializable]
+    public class RenderSettings
     {
-        public float radius = 5.0f;
+        /// <summary>
+        /// Size(in model coords of max detalization layer) of one chunk 
+        /// </summary>
+        public int chunkSize = 128;
+        public int chunksToRender = 2;
         public float worldHeight = 500f;
         public Texture2D baseTexture;
     }

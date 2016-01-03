@@ -35,6 +35,14 @@ namespace World.Model
         }
 
         /// <summary>
+        /// Transform normal model coordinate to world space coordinate
+        /// </summary>
+        public Vector2 ModelCoordToGlobal(float x, float y)
+        {
+            return new Vector2(x * ModelUnitWidth, y * ModelUnitWidth);
+        }
+
+        /// <summary>
         /// Transform global coordinate to nearest model coordinate
         /// </summary>
         public ModelCoord GlobalCoordToModel(Vector2 coord)

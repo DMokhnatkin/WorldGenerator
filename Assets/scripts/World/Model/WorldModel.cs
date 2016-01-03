@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using World.Model.Frames;
 using World.Common;
 
 namespace World.Model
@@ -95,6 +96,18 @@ namespace World.Model
             if (!Points.ContainsKey(normalCoord))
                 return CreatePoint(normalCoord);
             return this[normalCoord];
+        }
+
+        /// <summary>
+        /// Initialize points in specifed frame
+        /// </summary>
+        public void CreatePoints(IFrame frame)
+        {
+            foreach (ModelCoord z in frame.GetCoords())
+            {
+                if (!Contains(z))
+                    CreatePoint(z);
+            }
         }
     }
 }

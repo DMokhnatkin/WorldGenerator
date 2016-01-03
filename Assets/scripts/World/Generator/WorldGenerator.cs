@@ -2,6 +2,8 @@
 using World.Model.PointCollections;
 using World.Generator.Algorithms.PerlinNoise;
 using System.Collections;
+using World.Model.Frames;
+using UnityEngine;
 
 namespace World.Generator
 {
@@ -34,11 +36,14 @@ namespace World.Generator
         /// <summary>
         /// Generate specifed world points
         /// </summary>
-        public void Generate(IWorldPointCollection toGenerate)
+        public void Generate(BinPlus1SquareFrame frame)
         {
-            foreach (ModelPoint z in toGenerate)
+            foreach (ModelCoord z in frame.GetCoords())
             {
-                GeneratePoint(z);
+                Vector2 coord = model.CoordTransformer.ModelCoordToGlobal(z);
+                model[z].Data.height = perlin2d.Noise(0.0001f * coord.x + eps, 0.0001f * coord.y + eps) * 0.8f + 
+                    perlin2d.Noise(0.0005f * coord.x + eps, 0.0005f * coord.y + eps, 10) * 0.2f;
+                //model[z].Data.height = Mathf.PerlinNoise(0.001f * coord.x + eps, 0.001f * coord.y + eps);
             }
         }
     }

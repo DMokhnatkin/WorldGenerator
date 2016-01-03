@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using World.Instance;
 using World.Model;
+using World.Model.Frames;
 using World.Model.PointCollections;
+using World.Common;
 
 namespace World.Render
 {
     /// <summary>
-    /// This script renders world 
+    /// This script renders world
+    /// Square frame near player is rendered
     /// </summary>
-    [RequireComponent(typeof(RenderSettings))]
     public class WorldRender : MonoBehaviour
     {
         /// <summary>
@@ -19,51 +21,77 @@ namespace World.Render
         public WorldInstance World;
 
         /// <summary>
-        /// Rendered object
+        /// Settings for render
         /// </summary>
-        private GameObject renderedObject;
+        public RenderSettings settings = new RenderSettings();
 
-        private RenderSettings renderSettings;
+        public Dictionary<ModelCoord, Chunk> renderedChunks;
+
+        /// <summary>
+        /// Chunks in this area will be created in scene
+        /// </summary>
+        public SquareFrame CurRenderFrame { get; private set; }
+
+        ModelCoord prevChangedFrameCoord;
 
         void Start()
         {
             if (World != null)
                 World.PlayerMovedInModel += PlayerMovedInModel;
-            renderSettings = GetComponent<RenderSettings>();
-            renderedObject = new GameObject("worldObject", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
-            PlayerMovedInModel(null, World.CurModelCoord);
+            int coordRad = (settings.chunkSize - 1) * settings.chunksToRender + 1;
+            CurRenderFrame = new SquareFrame(
+                new ModelCoord(-coordRad + 1, -coordRad + 1), 
+                    coordRad * 2 - 1);
+            World.Model.CreatePoints(CurRenderFrame);
+            InitializeChunks();
+            prevChangedFrameCoord = new ModelCoord(0, 0);
         }
 
         private void PlayerMovedInModel(ModelCoord lastPos, ModelCoord newPos)
         {
-            var points = PointNavigation.GetAround(World.Model.MaxDetalizationLayer, 
-                World.Model[newPos], 
-                World.Model.CoordTransformer.GlobalDistToModel(renderSettings.radius, World.Model.MaxDetalizationLayer));
-            var meshFilter = renderedObject.GetComponent<MeshFilter>();
-            var meshRender = renderedObject.GetComponent<MeshRenderer>();
-            var meshCollider = renderedObject.GetComponent<MeshCollider>();
-            meshFilter.mesh.Clear();
-            List<Vector3> vertices = new List<Vector3>();
-            List<int> triangles = new List<int>();
-            foreach (ModelPointTriangle triangle in points.GetTriangles())
+            if (newPos.y - prevChangedFrameCoord.y >= settings.chunkSize)
             {
-                Vector2 pt1Coord = World.Model.CoordTransformer.ModelCoordToGlobal(triangle.v1.NormalCoord);
-                Vector2 pt2Coord = World.Model.CoordTransformer.ModelCoordToGlobal(triangle.v2.NormalCoord);
-                Vector2 pt3Coord = World.Model.CoordTransformer.ModelCoordToGlobal(triangle.v3.NormalCoord);
-                vertices.Add(new Vector3(pt1Coord.x, triangle.v1.Data.height * renderSettings.worldHeight, pt1Coord.y));
-                triangles.Add(vertices.Count - 1);
-                vertices.Add(new Vector3(pt2Coord.x, triangle.v2.Data.height * renderSettings.worldHeight, pt2Coord.y));
-                triangles.Add(vertices.Count - 1);
-                vertices.Add(new Vector3(pt3Coord.x, triangle.v3.Data.height * renderSettings.worldHeight, pt3Coord.y));
-                triangles.Add(vertices.Count - 1);
+                MoveFrameTop();
+                return;
             }
-            meshFilter.mesh.vertices = vertices.ToArray();
-            meshFilter.mesh.triangles = triangles.ToArray();
-            meshFilter.mesh.RecalculateNormals();
-            meshFilter.mesh.RecalculateNormals();
-            meshFilter.mesh.Optimize();
-            meshCollider.sharedMesh = meshFilter.sharedMesh;
-            meshRender.materials[0].mainTexture = renderSettings.baseTexture;
+        }
+
+        /// <summary>
+        /// Create chunks for curRender frame
+        /// </summary>
+        private void InitializeChunks()
+        {
+            renderedChunks = new Dictionary<ModelCoord, Chunk>();
+            for (int x = CurRenderFrame.LeftDown.x; x < CurRenderFrame.LeftDown.x + CurRenderFrame.Size - 1; x += settings.chunkSize - 1)
+                for (int y = CurRenderFrame.LeftDown.y; y < CurRenderFrame.LeftDown.y + CurRenderFrame.Size - 1; y += settings.chunkSize - 1)
+                {
+                    Chunk newChunk = new Chunk();
+                    newChunk.Initialize(new SquareFrame(new ModelCoord(x, y), settings.chunkSize), 
+                        World.Model, settings.worldHeight);
+                    newChunk.ApplyTexture(settings.baseTexture);
+                    renderedChunks.Add(newChunk.Frame.LeftDown, newChunk);
+                }
+        }
+
+        /// <summary>
+        /// Move curRenderFrame upper
+        /// </summary>
+        void MoveFrameTop()
+        {
+            for (int x = CurRenderFrame.LeftDown.x; x < CurRenderFrame.LeftDown.x + CurRenderFrame.Size - 1; x += settings.chunkSize - 1)
+            {
+                ModelCoord prevChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y);
+                ModelCoord newChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y + CurRenderFrame.Size - 1);
+                Chunk chunk = renderedChunks[prevChunkCoord];
+                renderedChunks.Remove(prevChunkCoord);
+                chunk.Initialize(new SquareFrame(newChunkCoord, settings.chunkSize), 
+                    World.Model, settings.worldHeight);
+                renderedChunks.Add(newChunkCoord, chunk);
+            }
+            CurRenderFrame = new SquareFrame(
+                new ModelCoord(CurRenderFrame.LeftDown.x, CurRenderFrame.LeftDown.y + settings.chunkSize),
+                CurRenderFrame.Size);
+            prevChangedFrameCoord = World.CurModelCoord;
         }
     }
 }
