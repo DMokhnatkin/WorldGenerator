@@ -13,6 +13,7 @@ namespace World.Render
     /// This script renders world
     /// Square frame near player is rendered
     /// </summary>
+    [RequireComponent(typeof(WorldInstance))]
     public class WorldRender : MonoBehaviour
     {
         /// <summary>
@@ -34,32 +35,33 @@ namespace World.Render
 
         ModelCoord prevChangedFrameCoord;
 
-        void Start()
+        void Awake()
         {
-            if (World != null)
-                World.PlayerMovedInModel += PlayerMovedInModel;
             int coordRad = (settings.chunkSize - 1) * settings.chunksToRender + 1;
             CurRenderFrame = new SquareFrame(
-                new ModelCoord(-coordRad + 1, -coordRad + 1), 
+                new ModelCoord(-coordRad + 1, -coordRad + 1),
                     coordRad * 2 - 1);
-            World.Model.CreatePoints(CurRenderFrame);
-            InitializeChunks();
-            prevChangedFrameCoord = new ModelCoord(0, 0);
         }
 
-        private void PlayerMovedInModel(ModelCoord lastPos, ModelCoord newPos)
+        /// <summary>
+        /// Listen player moved in model
+        /// </summary>
+        public void PlayerMovedInModel(ModelCoord lastPos, ModelCoord newPos)
         {
             if (newPos.y - prevChangedFrameCoord.y >= settings.chunkSize)
             {
                 MoveFrameTop();
-                return;
+            }
+            if (prevChangedFrameCoord.y - newPos.y >= settings.chunkSize)
+            {
+                MoveFrameDown();
             }
         }
 
         /// <summary>
         /// Create chunks for curRender frame
         /// </summary>
-        private void InitializeChunks()
+        public void Initialize()
         {
             renderedChunks = new Dictionary<ModelCoord, Chunk>();
             for (int x = CurRenderFrame.LeftDown.x; x < CurRenderFrame.LeftDown.x + CurRenderFrame.Size - 1; x += settings.chunkSize - 1)
@@ -71,6 +73,7 @@ namespace World.Render
                     newChunk.ApplyTexture(settings.baseTexture);
                     renderedChunks.Add(newChunk.Frame.LeftDown, newChunk);
                 }
+            prevChangedFrameCoord = new ModelCoord(0, 0);
         }
 
         /// <summary>
@@ -89,7 +92,28 @@ namespace World.Render
                 renderedChunks.Add(newChunkCoord, chunk);
             }
             CurRenderFrame = new SquareFrame(
-                new ModelCoord(CurRenderFrame.LeftDown.x, CurRenderFrame.LeftDown.y + settings.chunkSize),
+                new ModelCoord(CurRenderFrame.LeftDown.x, CurRenderFrame.LeftDown.y + settings.chunkSize - 1),
+                CurRenderFrame.Size);
+            prevChangedFrameCoord = World.CurModelCoord;
+        }
+
+        /// <summary>
+        /// Move curRenderFrame down
+        /// </summary>
+        void MoveFrameDown()
+        {
+            for (int x = CurRenderFrame.LeftDown.x; x < CurRenderFrame.LeftDown.x + CurRenderFrame.Size - 1; x += settings.chunkSize - 1)
+            {
+                ModelCoord prevChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y + CurRenderFrame.Size - settings.chunkSize);
+                ModelCoord newChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y - settings.chunkSize + 1);
+                Chunk chunk = renderedChunks[prevChunkCoord];
+                renderedChunks.Remove(prevChunkCoord);
+                chunk.Initialize(new SquareFrame(newChunkCoord, settings.chunkSize),
+                    World.Model, settings.worldHeight);
+                renderedChunks.Add(newChunkCoord, chunk);
+            }
+            CurRenderFrame = new SquareFrame(
+                new ModelCoord(CurRenderFrame.LeftDown.x, CurRenderFrame.LeftDown.y - settings.chunkSize + 1),
                 CurRenderFrame.Size);
             prevChangedFrameCoord = World.CurModelCoord;
         }

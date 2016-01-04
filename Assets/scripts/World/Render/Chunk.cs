@@ -59,9 +59,9 @@ namespace World.Render
                 {
                     ModelCoord pt1 = new ModelCoord(x, y);
                     if (!model.Contains(pt1))
-                        continue;
+                        throw new ArgumentException("Can't create mesh for chunk because model point wasn't created");
                     Vector2 pt1Pos = model.CoordTransformer.ModelCoordToGlobal(pt1);
-                    vertices.Add(new Vector3(pt1Pos.x, model[pt1].Data.height * maxHeight, pt1Pos.y));
+                    vertices.Add(new Vector3(pt1Pos.x, model[pt1].Data.Height * maxHeight, pt1Pos.y));
                     int pt1Id = (x - frame.LeftDown.x) + (y - frame.LeftDown.y) * frame.Size;
 
                     ModelCoord pt2 = new ModelCoord(x, y - 1);

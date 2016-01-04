@@ -33,8 +33,6 @@ namespace World.Debugger.WorldRender
                 return;
             if (!Application.isPlaying)
                 return;
-            if (settings == null)
-                settings = GetComponent<WorldRenderDebuggerSettings>();
             foreach (var z in worldRender.renderedChunks)
             {
                 if (settings.drawChunkBorders)

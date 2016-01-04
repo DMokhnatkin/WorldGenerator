@@ -23,7 +23,6 @@ namespace World.Debugger.WorldModel
         void Start()
         {
             detalization = worldInstance.Model.MaxDetalizationLayer.Id;
-            settings = GetComponent<WorldModelDebuggerSettings>();
         }
 
         void DrawPoint(Vector3 pos, ModelCoord coord)
@@ -51,7 +50,7 @@ namespace World.Debugger.WorldModel
                 if (!worldInstance.Model.Contains(z))
                     continue;
                 Vector2 pos = worldInstance.Model.CoordTransformer.ModelCoordToGlobal(z);
-                Vector3 pos3 = new Vector3(pos.x, worldInstance.Model[z].Data.height * settings.height, pos.y);
+                Vector3 pos3 = new Vector3(pos.x, worldInstance.Model[z].Data.Height * settings.height, pos.y);
                 DrawPoint(pos3, z);
             }
         }
