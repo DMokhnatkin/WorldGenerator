@@ -1,15 +1,27 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
+using System;
 
 namespace World.Instance
 {
-    public class WorldInstanceSettings : MonoBehaviour
+    [Serializable]
+    public class WorldInstanceSettings
     {
-        public List<float> _detalizations = new List<float>();
+        /// <summary>
+        /// Chunk is matrix chunkSize * chunkSize points
+        /// </summary>
+        public int chunkSize = 32;
 
+        /// <summary>
+        /// Global(unity) size of one model cell
+        /// </summary>
         public float baseCellSize = 1f;
 
-        public float generateRadius = 10f;
+        /// <summary>
+        /// Height of world
+        /// </summary>
+        public float height = 500;
+
+        public List<float> _detalizations = new List<float>();
 
         private int SearchDetalizationCoeff(float dist)
         {

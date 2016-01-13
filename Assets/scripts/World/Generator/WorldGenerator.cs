@@ -1,5 +1,4 @@
 ﻿using World.Model;
-using World.Model.PointCollections;
 using World.Generator.Algorithms.PerlinNoise;
 using System.Collections;
 using World.Model.Frames;

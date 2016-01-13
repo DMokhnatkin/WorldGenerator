@@ -62,9 +62,9 @@ namespace World.Model
         /// <summary>
         /// Transform model distance if specifed layer to global(Unity) distance
         /// </summary>
-        public float ModelDistToGlobal(float dist, WorldModelLayer layer)
+        public float ModelDistToGlobal(float dist)
         {
-            return (ModelUnitWidth * Pow2.GetPow2(layer.WorldModel.MaxDetalizationLayer.Id - layer.Id)) * dist;
+            return (ModelUnitWidth * dist);
         }
     }
 }

@@ -4,7 +4,6 @@ using UnityEngine;
 using World.Instance;
 using World.Model;
 using World.Model.Frames;
-using World.Model.PointCollections;
 using World.Common;
 
 namespace World.Render
@@ -26,7 +25,7 @@ namespace World.Render
         /// </summary>
         public RenderSettings settings = new RenderSettings();
 
-        public Dictionary<ModelCoord, Chunk> renderedChunks;
+        public Dictionary<ModelCoord, RenderChunk> renderedChunks;
 
         /// <summary>
         /// Chunks in this area will be created in scene
@@ -63,11 +62,11 @@ namespace World.Render
         /// </summary>
         public void Initialize()
         {
-            renderedChunks = new Dictionary<ModelCoord, Chunk>();
+            renderedChunks = new Dictionary<ModelCoord, RenderChunk>();
             for (int x = CurRenderFrame.LeftDown.x; x < CurRenderFrame.LeftDown.x + CurRenderFrame.Size - 1; x += settings.chunkSize - 1)
                 for (int y = CurRenderFrame.LeftDown.y; y < CurRenderFrame.LeftDown.y + CurRenderFrame.Size - 1; y += settings.chunkSize - 1)
                 {
-                    Chunk newChunk = new Chunk();
+                    RenderChunk newChunk = new RenderChunk();
                     newChunk.Initialize(new SquareFrame(new ModelCoord(x, y), settings.chunkSize), 
                         World.Model, settings.worldHeight);
                     newChunk.ApplyTexture(settings.baseTexture);
@@ -85,7 +84,7 @@ namespace World.Render
             {
                 ModelCoord prevChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y);
                 ModelCoord newChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y + CurRenderFrame.Size - 1);
-                Chunk chunk = renderedChunks[prevChunkCoord];
+                RenderChunk chunk = renderedChunks[prevChunkCoord];
                 renderedChunks.Remove(prevChunkCoord);
                 chunk.Initialize(new SquareFrame(newChunkCoord, settings.chunkSize), 
                     World.Model, settings.worldHeight);
@@ -106,7 +105,7 @@ namespace World.Render
             {
                 ModelCoord prevChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y + CurRenderFrame.Size - settings.chunkSize);
                 ModelCoord newChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y - settings.chunkSize + 1);
-                Chunk chunk = renderedChunks[prevChunkCoord];
+                RenderChunk chunk = renderedChunks[prevChunkCoord];
                 renderedChunks.Remove(prevChunkCoord);
                 chunk.Initialize(new SquareFrame(newChunkCoord, settings.chunkSize),
                     World.Model, settings.worldHeight);

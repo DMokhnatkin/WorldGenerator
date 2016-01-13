@@ -6,6 +6,7 @@ using World.Generator;
 using World.Generator.Algorithms;
 using World.Render;
 using World.Model.Frames;
+using World.Model.Chunks;
 
 namespace World.Instance
 {
@@ -45,7 +46,7 @@ namespace World.Instance
         /// <summary>
         /// Some settings for world instance
         /// </summary>
-        public WorldInstanceSettings settings;
+        public WorldInstanceSettings settings = new WorldInstanceSettings();
 
         /// <summary>
         /// Coordinate of current model point 
@@ -67,10 +68,17 @@ namespace World.Instance
             get { return Model.GetOrCreatePoint(CurModelCoord); }
         }
 
+        /// <summary>
+        /// Get modelChunk in which player is now.
+        /// </summary>
+        public ModelChunk CurModelChunk
+        {
+            get { return Model.ChunksGrid.GetChunkByInnerCoord(CurModelCoord); }
+        }
+
         void Awake()
         {
-            settings = GetComponent<WorldInstanceSettings>();
-            Model = new WorldModel(7, settings.baseCellSize);
+            Model = new WorldModel(7, settings.baseCellSize, settings.chunkSize);
             render = GetComponent<WorldRender>();
             generator = GetComponent<WorldGenerator>();
             LastCoord = CurModelCoord;

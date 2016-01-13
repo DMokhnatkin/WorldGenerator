@@ -6,7 +6,7 @@ using World.Model;
 
 namespace World.Render
 {
-    public class Chunk
+    public class RenderChunk
     {
         public GameObject ChunkObject { get; private set; }
 
@@ -21,7 +21,7 @@ namespace World.Render
         List<Vector3> vertices = new List<Vector3>();
         List<int> triangles = new List<int>();
 
-        public Chunk()
+        public RenderChunk()
         {
             ChunkObject = new GameObject("chunk", 
                 typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));

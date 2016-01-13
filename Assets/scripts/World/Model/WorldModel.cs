@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using World.Model.Frames;
 using World.Common;
+using World.Model.Chunks;
 
 namespace World.Model
 {
@@ -22,7 +23,12 @@ namespace World.Model
         /// </summary>
         public CoordTransformer CoordTransformer { get; private set; }
 
-        public WorldModel(int detalizationLayerCount, float modelUnitWidth)
+        /// <summary>
+        /// To access to model by chunks
+        /// </summary>
+        public ChunkGrid ChunksGrid { get; private set; }
+
+        public WorldModel(int detalizationLayerCount, float modelUnitWidth, int chunkSize)
         {
             detalizationLayers = new WorldModelLayer[detalizationLayerCount];
             // Reverse because we use maxDetalizationLayer to initialize other layers(we calculate lauer offset using int) 
@@ -30,6 +36,7 @@ namespace World.Model
                 detalizationLayers[i] = new WorldModelLayer(this, i);
             Points = new Dictionary<ModelCoord, ModelPoint>();
             CoordTransformer = new CoordTransformer(this, modelUnitWidth);
+            ChunksGrid = new ChunkGrid(this, chunkSize);
         }
 
         /// <summary>

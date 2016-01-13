@@ -29,6 +29,8 @@ namespace World.Debugger.WorldRender
 
         void OnDrawGizmos()
         {
+            if (!enabled)
+                return;
             if (worldRender == null)
                 return;
             if (!Application.isPlaying)

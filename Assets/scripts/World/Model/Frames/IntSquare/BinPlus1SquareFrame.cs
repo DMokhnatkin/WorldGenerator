@@ -14,11 +14,6 @@ namespace World.Model.Frames
             if (Pow2.GetLog2(size - 1) == -1)
                 throw new ArgumentException("Size must be 2^n + 1");
         }
-        
-        /// <summary>
-        /// Get center coord of frame
-        /// </summary>
-        public ModelCoord Center { get { return (new ModelCoord(LeftDown.x + Size / 2, LeftDown.y + Size / 2)); } }
 
         /// <summary>
         /// Get center point of top edge

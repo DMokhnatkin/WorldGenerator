@@ -18,7 +18,7 @@ namespace World.Generator.Algorithms.DiamondSquare
         public DiamondSquare(WorldModel model)
         {
             this.model = model; 
-            _maxOffsetForModelUnit = model.CoordTransformer.ModelDistToGlobal(1, model.MaxDetalizationLayer) * settings.harshness;
+            _maxOffsetForModelUnit = model.CoordTransformer.ModelDistToGlobal(1) * settings.harshness;
         }
 
         void Square(BinPlus1SquareFrame frame)

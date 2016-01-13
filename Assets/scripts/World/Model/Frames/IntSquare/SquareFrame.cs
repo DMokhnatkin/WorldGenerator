@@ -17,6 +17,14 @@ namespace World.Model.Frames
         /// </summary>
         public int Size { get; protected set; }
 
+        /// <summary>
+        /// Get center of frame. If center is float, will be rounded.
+        /// </summary>
+        public ModelCoord Center
+        {
+            get { return new ModelCoord(LeftDown.x + Size / 2, LeftDown.y + Size / 2); }
+        }
+
         public SquareFrame(ModelCoord leftDown, int size)
         {
             LeftDown = leftDown;
