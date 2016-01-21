@@ -25,6 +25,26 @@ namespace World.Model.Frames
             get { return new ModelCoord(LeftDown.x + Size / 2, LeftDown.y + Size / 2); }
         }
 
+        public int LeftBorder
+        {
+            get { return LeftDown.x; }
+        }
+
+        public int RightBorder
+        {
+            get { return LeftDown.x + Size + 1; }
+        }
+
+        public int TopBorder
+        {
+            get { return LeftDown.y + Size - 1; }
+        }
+
+        public int DownBorder
+        {
+            get { return LeftDown.y; }
+        }
+
         public SquareFrame(ModelCoord leftDown, int size)
         {
             LeftDown = leftDown;

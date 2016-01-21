@@ -5,6 +5,8 @@ using World.Instance;
 using World.Model;
 using World.Model.Frames;
 using World.Common;
+using World.Render.Chunks;
+using World.Model.Chunks;
 
 namespace World.Render
 {
@@ -25,35 +27,22 @@ namespace World.Render
         /// </summary>
         public RenderSettings settings = new RenderSettings();
 
-        public Dictionary<ModelCoord, RenderChunk> renderedChunks;
+        public Dictionary<ModelChunk, TerrainRenderChunk> renderedChunks;
 
         /// <summary>
-        /// Chunks in this area will be created in scene
+        /// Listen player moved from chunk
         /// </summary>
-        public SquareFrame CurRenderFrame { get; private set; }
-
-        ModelCoord prevChangedFrameCoord;
-
-        void Awake()
+        public void PlayerChunkCoordChanged(ModelCoord prevChunkCoord, ModelCoord newChunkCoord)
         {
-            int coordRad = (settings.chunkSize - 1) * settings.chunksToRender + 1;
-            CurRenderFrame = new SquareFrame(
-                new ModelCoord(-coordRad + 1, -coordRad + 1),
-                    coordRad * 2 - 1);
-        }
-
-        /// <summary>
-        /// Listen player moved in model
-        /// </summary>
-        public void PlayerMovedInModel(ModelCoord lastPos, ModelCoord newPos)
-        {
-            if (newPos.y - prevChangedFrameCoord.y >= settings.chunkSize)
+            renderedChunks.Clear();
+            foreach (ChunkDetalization z in settings.detalization.GetDetalizations(World.CurChunkCoord))
             {
-                MoveFrameTop();
-            }
-            if (prevChangedFrameCoord.y - newPos.y >= settings.chunkSize)
-            {
-                MoveFrameDown();
+                ModelChunk chunk = World.Model.ChunksGrid.GetChunk(z.chunkCoord);
+                if (!renderedChunks.ContainsKey(chunk))
+                {
+                    renderedChunks.Add(chunk, new TerrainRenderChunk(chunk, z.detalization, settings));
+                    SetNeighbors(chunk, true);
+                }
             }
         }
 
@@ -62,59 +51,46 @@ namespace World.Render
         /// </summary>
         public void Initialize()
         {
-            renderedChunks = new Dictionary<ModelCoord, RenderChunk>();
-            for (int x = CurRenderFrame.LeftDown.x; x < CurRenderFrame.LeftDown.x + CurRenderFrame.Size - 1; x += settings.chunkSize - 1)
-                for (int y = CurRenderFrame.LeftDown.y; y < CurRenderFrame.LeftDown.y + CurRenderFrame.Size - 1; y += settings.chunkSize - 1)
+            renderedChunks = new Dictionary<ModelChunk, TerrainRenderChunk>();
+            foreach(ChunkDetalization z in settings.detalization.GetDetalizations(World.CurChunkCoord))
+            {
+                ModelChunk chunk = World.Model.ChunksGrid.GetChunk(z.chunkCoord);
+                if (!renderedChunks.ContainsKey(chunk))
                 {
-                    RenderChunk newChunk = new RenderChunk();
-                    newChunk.Initialize(new SquareFrame(new ModelCoord(x, y), settings.chunkSize), 
-                        World.Model, settings.worldHeight);
-                    newChunk.ApplyTexture(settings.baseTexture);
-                    renderedChunks.Add(newChunk.Frame.LeftDown, newChunk);
+                    renderedChunks.Add(chunk, new TerrainRenderChunk(chunk, z.detalization, settings));
+                    SetNeighbors(chunk, true);
                 }
-            prevChangedFrameCoord = new ModelCoord(0, 0);
+            }
         }
 
         /// <summary>
-        /// Move curRenderFrame upper
+        /// 
         /// </summary>
-        void MoveFrameTop()
+        /// <param name="chunk"></param>
+        /// <param name="rec">If true for each neighbor will be setted neighbors too</param>
+        private void SetNeighbors(ModelChunk chunk, bool rec)
         {
-            for (int x = CurRenderFrame.LeftDown.x; x < CurRenderFrame.LeftDown.x + CurRenderFrame.Size - 1; x += settings.chunkSize - 1)
+            if (!renderedChunks.ContainsKey(chunk))
+                return;
+            ModelChunk top = ChunksNavigator.TopNeighbor(chunk);
+            ModelChunk right = ChunksNavigator.RightNeighbor(chunk);
+            ModelChunk down = ChunksNavigator.DownNeighbor(chunk);
+            ModelChunk left = ChunksNavigator.LeftNeighbor(chunk);
+
+            Terrain topTerrain = renderedChunks.ContainsKey(top) ? renderedChunks[top].TerrainComponent : null;
+            Terrain rightTerrain = renderedChunks.ContainsKey(right) ? renderedChunks[right].TerrainComponent : null;
+            Terrain downTerrain = renderedChunks.ContainsKey(down) ? renderedChunks[down].TerrainComponent : null;
+            Terrain leftTerrain = renderedChunks.ContainsKey(left) ? renderedChunks[left].TerrainComponent : null;
+
+            renderedChunks[chunk].TerrainComponent.SetNeighbors(leftTerrain, topTerrain, rightTerrain, downTerrain);
+            if (rec)
             {
-                ModelCoord prevChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y);
-                ModelCoord newChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y + CurRenderFrame.Size - 1);
-                RenderChunk chunk = renderedChunks[prevChunkCoord];
-                renderedChunks.Remove(prevChunkCoord);
-                chunk.Initialize(new SquareFrame(newChunkCoord, settings.chunkSize), 
-                    World.Model, settings.worldHeight);
-                renderedChunks.Add(newChunkCoord, chunk);
+                SetNeighbors(top, false);
+                SetNeighbors(right, false);
+                SetNeighbors(down, false);
+                SetNeighbors(left, false);
             }
-            CurRenderFrame = new SquareFrame(
-                new ModelCoord(CurRenderFrame.LeftDown.x, CurRenderFrame.LeftDown.y + settings.chunkSize - 1),
-                CurRenderFrame.Size);
-            prevChangedFrameCoord = World.CurModelCoord;
         }
 
-        /// <summary>
-        /// Move curRenderFrame down
-        /// </summary>
-        void MoveFrameDown()
-        {
-            for (int x = CurRenderFrame.LeftDown.x; x < CurRenderFrame.LeftDown.x + CurRenderFrame.Size - 1; x += settings.chunkSize - 1)
-            {
-                ModelCoord prevChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y + CurRenderFrame.Size - settings.chunkSize);
-                ModelCoord newChunkCoord = new ModelCoord(x, CurRenderFrame.LeftDown.y - settings.chunkSize + 1);
-                RenderChunk chunk = renderedChunks[prevChunkCoord];
-                renderedChunks.Remove(prevChunkCoord);
-                chunk.Initialize(new SquareFrame(newChunkCoord, settings.chunkSize),
-                    World.Model, settings.worldHeight);
-                renderedChunks.Add(newChunkCoord, chunk);
-            }
-            CurRenderFrame = new SquareFrame(
-                new ModelCoord(CurRenderFrame.LeftDown.x, CurRenderFrame.LeftDown.y - settings.chunkSize + 1),
-                CurRenderFrame.Size);
-            prevChangedFrameCoord = World.CurModelCoord;
-        }
     }
 }

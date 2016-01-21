@@ -11,6 +11,7 @@ namespace World.Model.Frames
     public interface IFrame
     {
         IEnumerable<ModelCoord> GetCoords();
+
         bool Contains(ModelCoord coord);
     }
 }

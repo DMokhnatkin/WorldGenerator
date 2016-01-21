@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using World.Model;
 
 namespace World.Render
 {
@@ -9,9 +10,9 @@ namespace World.Render
         /// <summary>
         /// Size(in model coords of max detalization layer) of one chunk 
         /// </summary>
-        public int chunkSize = 128;
-        public int chunksToRender = 2;
         public float worldHeight = 500f;
         public Texture2D baseTexture;
+
+        public DetalizationRadius detalization = new DetalizationRadius(8);
     }
 }

@@ -24,6 +24,12 @@ namespace World.Instance
         public ModelCoord LastCoord { get; private set; }
 
         /// <summary>
+        /// Last model chunk coordinate, when we raised chunk coord changed.
+        /// If current chunk coord is not equals it we must raise chunk coord changed.
+        /// </summary>
+        public ModelCoord LastChunkCoord { get; private set; }
+
+        /// <summary>
         /// Player object. World will be generated and rendered around it.
         /// </summary>
         public GameObject player;
@@ -36,12 +42,12 @@ namespace World.Instance
         /// <summary>
         /// Generator. Contains generator algorithm(algorithm applied to model)
         /// </summary>
-        private WorldGenerator generator;
+        public WorldGenerator WorldGenerator { get; private set; }
 
         /// <summary>
         /// World render.
         /// </summary>
-        private WorldRender render;
+        public WorldRender WorldRender { get; private set; }
 
         /// <summary>
         /// Some settings for world instance
@@ -68,6 +74,11 @@ namespace World.Instance
             get { return Model.GetOrCreatePoint(CurModelCoord); }
         }
 
+        public ModelCoord CurChunkCoord
+        {
+            get { return Model.ChunksGrid.GetChunkByInnerCoord(CurModelCoord).Coord; }
+        }
+
         /// <summary>
         /// Get modelChunk in which player is now.
         /// </summary>
@@ -79,15 +90,16 @@ namespace World.Instance
         void Awake()
         {
             Model = new WorldModel(7, settings.baseCellSize, settings.chunkSize);
-            render = GetComponent<WorldRender>();
-            generator = GetComponent<WorldGenerator>();
-            LastCoord = CurModelCoord;
+            WorldRender = GetComponent<WorldRender>();
+            WorldGenerator = GetComponent<WorldGenerator>();
+            LastCoord = new ModelCoord(0, 0);
+            LastChunkCoord = new ModelCoord(0, 0);
         }
 
         void Start()
         {
-            generator.Initialize();
-            render.Initialize();
+            WorldGenerator.Initialize();
+            WorldRender.Initialize();
         }
 
         void Update()
@@ -96,9 +108,13 @@ namespace World.Instance
                 player.transform.position.z));
             if (!curCoord.Equals(LastCoord))
             {
-                generator.PlayerMovedInModel(LastCoord, curCoord);
-                render.PlayerMovedInModel(LastCoord, curCoord);
+                WorldGenerator.PlayerMovedInModel(LastCoord, curCoord);
                 LastCoord = curCoord;
+            }
+            if (!CurChunkCoord.Equals(LastChunkCoord))
+            {
+                WorldRender.PlayerChunkCoordChanged(LastChunkCoord, CurChunkCoord);
+                LastChunkCoord = CurChunkCoord;
             }
         }
     }

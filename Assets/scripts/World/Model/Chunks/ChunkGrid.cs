@@ -28,7 +28,7 @@ namespace World.Model.Chunks
         {
             SquareFrame frame = new SquareFrame(new ModelCoord(chunkCoord.x * ChunkSize, chunkCoord.y * ChunkSize), 
                 ChunkSize);
-            return new ModelChunk(chunkCoord, frame);
+            return new ModelChunk(chunkCoord, frame, Model);
         }
 
         /// <summary>
@@ -39,6 +39,21 @@ namespace World.Model.Chunks
             ModelCoord chunkCoord = new ModelCoord(pointCoordInChunk.x / ChunkSize,
                 pointCoordInChunk.y / ChunkSize);
             return GetChunk(chunkCoord);
+        }
+
+        /// <summary>
+        /// Create new empty points to extend detalizayion of chunk
+        /// </summary>
+        public void ExtendDetalization(ModelChunk chunk, int newDetalization)
+        {
+            WorldModelLayer newLayer = Model.GetLayer(newDetalization);
+            for (int x = chunk.Frame.LeftBorder; x <= chunk.Frame.RightBorder; x += newLayer.CoordOffset)
+                for (int y = chunk.Frame.DownBorder; y <= chunk.Frame.TopBorder; y += newLayer.CoordOffset)
+                {
+                    ModelCoord coord = new ModelCoord(x, y);
+                    if (!Model.Contains(coord))
+                        Model.CreatePoint(coord);
+                }
         }
     }
 }
