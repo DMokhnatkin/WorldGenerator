@@ -59,7 +59,7 @@ namespace World.Model.Chunks
         /// </summary>
         public int GetSizeInLayer(int layerId)
         {
-            return Size / (Pow2.GetPow2((Model.MaxDetalizationLayerId - layerId)));
+            return (Size - 1) / (Pow2.GetPow2((Model.MaxDetalizationLayerId - layerId))) + 1;
         }
 
         /// <summary>
@@ -71,6 +71,21 @@ namespace World.Model.Chunks
                 Frame.LeftBorder + coord.x * Model.GetLayer(layerId).CoordOffset,
                 Frame.DownBorder + coord.y * Model.GetLayer(layerId).CoordOffset);
             return Model[normalCoord];
+        }
+
+        /// <summary>
+        /// Starts from left down corner then fill by rows (first x then y changed)
+        /// </summary>
+        /// <param name="layerId"></param>
+        /// <returns></returns>
+        public IEnumerable<ModelPoint> GetPointsInLayer(int layerId)
+        {
+            WorldModelLayer layer = Model.GetLayer(layerId);
+            for (int y = Frame.DownBorder; y <= Frame.TopBorder; y += layer.CoordOffset)
+                for (int x = Frame.LeftBorder; x <= Frame.RightBorder; x += layer.CoordOffset)
+                {
+                    yield return Model[new ModelCoord(x, y)];
+                }
         }
     }
 }

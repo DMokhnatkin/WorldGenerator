@@ -63,7 +63,9 @@ namespace World.Model
             for (int x = curChunkCoord.x - data[data.Length - 1]; x <= curChunkCoord.x + data[data.Length - 1]; x++)
                 for (int y = curChunkCoord.y - data[data.Length - 1]; y <= curChunkCoord.y + data[data.Length - 1]; y++)
                 {
-                    yield return new ChunkDetalization(new ModelCoord(x, y), GetDetalization(Math.Min(x, y)));
+                    yield return new ChunkDetalization(new ModelCoord(x, y),
+                        GetDetalization((int)Math.Sqrt(Math.Pow(x - curChunkCoord.x, 2) +
+                            Math.Pow(y - curChunkCoord.y, 2))));
                 }
         }
 

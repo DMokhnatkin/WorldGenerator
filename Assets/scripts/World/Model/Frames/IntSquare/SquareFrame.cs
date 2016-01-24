@@ -32,7 +32,7 @@ namespace World.Model.Frames
 
         public int RightBorder
         {
-            get { return LeftDown.x + Size + 1; }
+            get { return LeftDown.x + Size - 1; }
         }
 
         public int TopBorder

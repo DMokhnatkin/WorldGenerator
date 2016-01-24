@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
+using World.Model;
 
 namespace World.Instance
 {
@@ -20,5 +21,7 @@ namespace World.Instance
         /// Height of world
         /// </summary>
         public float height = 500;
+
+        public DetalizationRadius detalization = new DetalizationRadius(6);
     }
 }

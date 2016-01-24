@@ -12,7 +12,5 @@ namespace World.Render
         /// </summary>
         public float worldHeight = 500f;
         public Texture2D baseTexture;
-
-        public DetalizationRadius detalization = new DetalizationRadius(8);
     }
 }

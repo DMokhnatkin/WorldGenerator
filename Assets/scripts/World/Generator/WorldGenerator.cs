@@ -4,6 +4,8 @@ using System.Collections;
 using World.Model.Frames;
 using UnityEngine;
 using World.Instance;
+using System.Collections.Generic;
+using World.Model.Chunks;
 
 namespace World.Generator
 {
@@ -13,20 +15,33 @@ namespace World.Generator
         const float BASE_HARSHNESS = 1f; // For better harshness representation
         public const float eps = 0.01f;
 
-        Perlin2D perlin2d;
+        Perlin2D perlin2d_1;
+        Perlin2D perlin2d_2;
+        Perlin2D perlin2d_3;
+
+        Vector2 seed1;
+        Vector2 seed2;
+        Vector2 seed3;
+        Vector2 seed4;
 
         WorldInstance worldInstance;
 
         /// <summary>
-        /// Cur generated frame
+        /// Current generated detalization for chunks
         /// </summary>
-        public SquareFrame CurGenerateFrame { get; private set; }
+        Dictionary<ModelChunk, int> generatedChunks = new Dictionary<ModelChunk, int>();
 
         public WorldGeneratorSettings settings = new WorldGeneratorSettings();
 
         void Awake()
         {
-            perlin2d = new Perlin2D(new System.Random().Next());
+            perlin2d_1 = new Perlin2D(new System.Random().Next());
+            perlin2d_2 = new Perlin2D(new System.Random().Next());
+            perlin2d_3 = new Perlin2D(new System.Random().Next());
+            seed1 = new Vector2(UnityEngine.Random.value * 1000, UnityEngine.Random.value * 1000);
+            seed2 = new Vector2(UnityEngine.Random.value * 1000, UnityEngine.Random.value * 1000);
+            seed3 = new Vector2(UnityEngine.Random.value * 1000, UnityEngine.Random.value * 1000);
+            seed4 = new Vector2(UnityEngine.Random.value * 1000, UnityEngine.Random.value * 1000);
             worldInstance = GetComponent<WorldInstance>();
         }
 
@@ -36,9 +51,22 @@ namespace World.Generator
         /// <param name="pt"></param>
         private void GeneratePoint(ModelCoord coord)
         {
-            worldInstance.Model[coord].Data.Height = perlin2d.Noise(0.0001f * coord.x + eps, 0.0001f * coord.y + eps) * 0.8f +
-                    perlin2d.Noise(0.0005f * coord.x + eps, 0.0005f * coord.y + eps, 10) * 0.2f;
+            Vector2 pos = worldInstance.Model.CoordTransformer.ModelCoordToGlobal(coord);
+            worldInstance.Model[coord].Data.Height = Mathf.PerlinNoise(seed1.x + 0.0001f * pos.x + eps, seed1.y + 0.0001f * pos.y + eps) *
+                Mathf.PerlinNoise(seed1.x + 0.001f * pos.x + eps, seed1.y + 0.001f * pos.y + eps) * 0.7f;
+            //    Mathf.PerlinNoise(seed2.x + 0.008f * pos.x + eps, seed2.y + 0.008f * pos.y + eps) * 0.25f +
+            //    Mathf.PerlinNoise(seed3.x + 0.01f * pos.x + eps, seed3.y + 0.01f * pos.y + eps) * 0.125f +
+            //    Mathf.PerlinNoise(seed4.x + 0.02f * pos.x + eps, seed4.y + 0.02f * pos.y + eps) * 0.125f;
+            //worldInstance.Model[coord].Data.Height = perlin2d.Noise(0.0001f * coord.x + eps, 0.0001f * coord.y + eps) * 0.8f +
+            //        perlin2d.Noise(0.0005f * coord.x + eps, 0.0005f * coord.y + eps, 10) * 0.2f;
             worldInstance.Model[coord].Data.heightGenerated = true;
+        }
+
+        private void GenerateChunk(ModelChunk chunk, int newDetalization)
+        {
+            worldInstance.Model.ChunksGrid.ExtendDetalization(chunk, newDetalization);
+            foreach (ModelPoint z in chunk.GetPointsInLayer(newDetalization))
+                GeneratePoint(z.NormalCoord);
         }
 
         /// <summary>
@@ -46,73 +74,9 @@ namespace World.Generator
         /// </summary>
         public void Initialize()
         {
-            CurGenerateFrame = new SquareFrame(
-                new ModelCoord(-settings.generateRadius, -settings.generateRadius),
-                settings.generateRadius * 2 + 1);
-            foreach (ModelCoord z in CurGenerateFrame.GetCoords())
+            foreach (ChunkDetalization z in worldInstance.settings.detalization.GetDetalizations(worldInstance.CurChunkCoord))
             {
-                if (!worldInstance.Model.Contains(z))
-                    worldInstance.Model.CreatePoint(z);
-                GeneratePoint(z);
-            }
-        }
-
-        /// <summary>
-        /// Move frame top
-        /// </summary>
-        void MoveFrameTop(int dy)
-        {
-            for (int x = CurGenerateFrame.LeftDown.x; x < CurGenerateFrame.LeftDown.x + CurGenerateFrame.Size; x++)
-            {
-                for (int y = CurGenerateFrame.LeftDown.y + CurGenerateFrame.Size; y < CurGenerateFrame.LeftDown.y + CurGenerateFrame.Size + dy; y++)
-                {
-                    ModelCoord coord = new ModelCoord(x, y);
-                    if (!worldInstance.Model.Contains(coord))
-                        worldInstance.Model.CreatePoint(coord);
-                    if (worldInstance.Model[coord].Data.heightGenerated)
-                        continue;
-                    GeneratePoint(coord);
-                }
-            }
-            CurGenerateFrame = new SquareFrame(
-                new ModelCoord(CurGenerateFrame.LeftDown.x, CurGenerateFrame.LeftDown.y + dy),
-                CurGenerateFrame.Size);
-        }
-
-        /// <summary>
-        /// Move frame down
-        /// </summary>
-        void MoveFrameDown(int dy)
-        {
-            for (int x = CurGenerateFrame.LeftDown.x; x < CurGenerateFrame.LeftDown.x + CurGenerateFrame.Size; x++)
-            {
-                for (int y = CurGenerateFrame.LeftDown.y - 1; y >= CurGenerateFrame.LeftDown.y - dy; y--)
-                {
-                    ModelCoord coord = new ModelCoord(x, y);
-                    if (!worldInstance.Model.Contains(coord))
-                        worldInstance.Model.CreatePoint(coord);
-                    if (worldInstance.Model[coord].Data.heightGenerated)
-                        continue;
-                    GeneratePoint(coord);
-                }
-            }
-            CurGenerateFrame = new SquareFrame(
-                new ModelCoord(CurGenerateFrame.LeftDown.x, CurGenerateFrame.LeftDown.y - dy),
-                CurGenerateFrame.Size);
-        }
-
-        /// <summary>
-        /// Listen player moved in model
-        /// </summary>
-        public void PlayerMovedInModel(ModelCoord lastPos, ModelCoord newPos)
-        {
-            if (newPos.y - lastPos.y >= 1)
-            {
-                MoveFrameTop(newPos.y - lastPos.y);
-            }
-            if (lastPos.y - newPos.y >= 1)
-            {
-                MoveFrameDown(lastPos.y - newPos.y);
+                GenerateChunk(worldInstance.Model.ChunksGrid.GetChunk(z.chunkCoord), z.detalization);
             }
         }
     }

@@ -5,7 +5,6 @@ using World.Instance;
 using World.Model;
 using World.Model.Frames;
 using World.Common;
-using World.Render.Chunks;
 using World.Model.Chunks;
 
 namespace World.Render
@@ -15,7 +14,7 @@ namespace World.Render
     /// Square frame near player is rendered
     /// </summary>
     [RequireComponent(typeof(WorldInstance))]
-    public class WorldRender : MonoBehaviour
+    public partial class WorldRender : MonoBehaviour
     {
         /// <summary>
         /// World to render
@@ -27,23 +26,194 @@ namespace World.Render
         /// </summary>
         public RenderSettings settings = new RenderSettings();
 
-        public Dictionary<ModelChunk, TerrainRenderChunk> renderedChunks;
+        private Dictionary<ModelChunk, RenderedChunk> renderedChunks;
+
+        public const float CHUNKS_IMPOSITION = 0.1f;
+
+        #region Rendered chunks
+        private abstract class RenderedChunk
+        {
+            /// <summary>
+            /// Associated game object
+            /// </summary>
+            public GameObject GameObject { get; protected set; }
+
+            /// <summary>
+            /// Associated chunk
+            /// </summary>
+            public ModelChunk Chunk { get; protected set; }
+
+            /// <summary>
+            /// Rendered detalizaton
+            /// </summary>
+            public int Detalization { get; protected set; }
+
+            public RenderedChunk(GameObject gameObject, ModelChunk chunk, int detalization)
+            {
+                GameObject = gameObject;
+                Chunk = chunk;
+                Detalization = detalization;
+            }
+        }
+
+        /// <summary>
+        /// For this chunk was used terrain to render.
+        /// </summary>
+        private class TerrainRenderedChunk : RenderedChunk
+        {
+            /// <summary>
+            /// Associated terrain component
+            /// </summary>
+            public Terrain TerrainComponent { get { return GameObject.GetComponent<Terrain>(); } }
+
+            public TerrainRenderedChunk(GameObject gameObject, ModelChunk chunk, int detalization) : 
+                base(gameObject, chunk, detalization)
+            { }
+        }
+
+        /// <summary>
+        /// For this chunk was used mesh to render.
+        /// </summary>
+        private class MeshRenderedChunk : RenderedChunk
+        {
+            /// <summary>
+            /// Associated MeshRenderer component
+            /// </summary>
+            public MeshRenderer MeshRendererComponent { get { return GameObject.GetComponent<MeshRenderer>(); } }
+
+            /// <summary>
+            /// Associated MeshFilter component
+            /// </summary>
+            public MeshFilter MeshFilterComponent { get { return GameObject.GetComponent<MeshFilter>(); } }
+
+            public MeshRenderedChunk(GameObject gameObject, ModelChunk chunk, int detalization) : 
+                base(gameObject, chunk, detalization)
+            {}
+        }
+        #endregion
+
+        /// <summary>
+        /// Render new chunk using terrain.
+        /// </summary>
+        private void RenderNewTerrainChunk(ModelChunk chunk, int detalization)
+        {
+            if (chunk.GetSizeInLayer(detalization) < 33)
+            {
+                throw new ArgumentException("Can't render chunk using terrain. Size in current detalization is less then 33");
+            }
+            TerrainRenderedChunk res;
+            TerrainData data = new TerrainData();
+            float chunkSize = chunk.Model.CoordTransformer.ModelDistToGlobal(chunk.Size - 1);
+            // Terrain heights
+            data.heightmapResolution = chunk.GetSizeInLayer(detalization);
+            float[,] heighmap = new float[data.heightmapWidth, data.heightmapHeight];
+            for (int x = 0; x < data.heightmapWidth; x++)
+                for (int y = 0; y < data.heightmapHeight; y++)
+                {
+                    ModelPoint pt = chunk.GetPointInLayer(new ModelCoord(x, y), detalization);
+                    if (pt == null)
+                        throw new ArgumentException("Point in model is null");
+                    heighmap[y, x] = pt.Data.Height;
+                }
+            data.SetHeightsDelayLOD(0, 0, heighmap);
+
+            // Terrain textures
+            data.splatPrototypes = new SplatPrototype[1] { new SplatPrototype() { texture = settings.baseTexture } };
+            float[,,] alphamap = new float[data.alphamapWidth, data.alphamapHeight, 1];
+            for (int x = 0; x < data.alphamapWidth; x++)
+                for (int y = 0; y < data.alphamapHeight; y++)
+                {
+                    alphamap[x, y, 0] = 1;
+                }
+            data.SetAlphamaps(0, 0, alphamap);
+
+            // Create TerrainRenderChunk and add it to renderedChunks
+            data.size = new Vector3(chunkSize, settings.worldHeight, chunkSize);
+            res = new TerrainRenderedChunk(Terrain.CreateTerrainGameObject(data), chunk, detalization);
+            Vector2 chunkPos = chunk.Model.CoordTransformer.ModelCoordToGlobal(chunk.Frame.LeftDown);
+            res.GameObject.transform.position = new Vector3(chunkPos.x - chunkSize / 2.0f, 0, chunkPos.y - chunkSize / 2.0f);
+            res.GameObject.name = "Chunk " + chunk.Coord.ToString();
+            renderedChunks.Add(chunk, res);
+            res.TerrainComponent.ApplyDelayedHeightmapModification();
+            return;
+        }
+
+        /// <summary>
+        /// Render new chunk using mesh.
+        /// </summary>
+        private void RenderNewMeshChunk(ModelChunk chunk, int detalization)
+        {
+            MeshRenderedChunk res = new MeshRenderedChunk(
+                new GameObject("Chunk " + chunk.Coord.ToString(), typeof(MeshFilter), typeof(MeshRenderer)),
+                chunk, 
+                detalization);
+
+            float chunkSize = chunk.Model.CoordTransformer.ModelDistToGlobal(chunk.Size - 1);
+            res.MeshFilterComponent.mesh = new Mesh();
+            int sizeInLayer = chunk.GetSizeInLayer(detalization);
+
+            // Generate mesh
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> triangles = new List<int>();
+            foreach (ModelPoint z in chunk.GetPointsInLayer(detalization))
+            {
+                Vector2 pos = chunk.Model.CoordTransformer.ModelCoordToGlobal(z.NormalCoord);
+                vertices.Add(new Vector3(pos.x - chunkSize / 2.0f, z.Data.Height * settings.worldHeight, pos.y - chunkSize / 2.0f));
+                int v0 = vertices.Count - 1;
+                int v1 = vertices.Count - 2;
+                int v2 = vertices.Count - 1 - sizeInLayer;
+                int v3 = vertices.Count - 2 - sizeInLayer;
+                if (v3 >= 0)
+                {
+                    triangles.Add(v1);
+                    triangles.Add(v0);
+                    triangles.Add(v3);
+
+                    triangles.Add(v0);
+                    triangles.Add(v2);
+                    triangles.Add(v3);
+                }
+            }
+
+            // Apply generated mesh
+            res.MeshFilterComponent.mesh.vertices = vertices.ToArray();
+            res.MeshFilterComponent.mesh.triangles = triangles.ToArray();
+            res.MeshFilterComponent.mesh.Optimize();
+
+            // Apply textures
+            res.MeshRendererComponent.material.mainTexture = settings.baseTexture;
+
+            renderedChunks.Add(chunk, res);
+        }
+
+        /// <summary>
+        /// Render new chunk. (chunk shouldn't be rendered before)
+        /// </summary>
+        private void RenderNewChunk(ModelChunk chunk, int detalization)
+        {
+            if (renderedChunks.ContainsKey(chunk))
+                throw new ArgumentException("Chunk was rendered before");
+            if (detalization < 0 ||
+                detalization > World.Model.MaxDetalizationLayerId)
+                throw new ArgumentException("Forbidden detalization(" + detalization + ")");
+            // Can we use unity terrain?
+            // Min terrain heighmap resolution = 33
+            if (chunk.GetSizeInLayer(detalization) >= 33)
+            {
+                RenderNewTerrainChunk(chunk, detalization);
+                SetNeighbors(chunk, true);
+            }
+            if (chunk.GetSizeInLayer(detalization) < 33)
+            {
+                RenderNewMeshChunk(chunk, detalization);
+            }
+        }
 
         /// <summary>
         /// Listen player moved from chunk
         /// </summary>
         public void PlayerChunkCoordChanged(ModelCoord prevChunkCoord, ModelCoord newChunkCoord)
         {
-            renderedChunks.Clear();
-            foreach (ChunkDetalization z in settings.detalization.GetDetalizations(World.CurChunkCoord))
-            {
-                ModelChunk chunk = World.Model.ChunksGrid.GetChunk(z.chunkCoord);
-                if (!renderedChunks.ContainsKey(chunk))
-                {
-                    renderedChunks.Add(chunk, new TerrainRenderChunk(chunk, z.detalization, settings));
-                    SetNeighbors(chunk, true);
-                }
-            }
         }
 
         /// <summary>
@@ -51,14 +221,13 @@ namespace World.Render
         /// </summary>
         public void Initialize()
         {
-            renderedChunks = new Dictionary<ModelChunk, TerrainRenderChunk>();
-            foreach(ChunkDetalization z in settings.detalization.GetDetalizations(World.CurChunkCoord))
+            renderedChunks = new Dictionary<ModelChunk, RenderedChunk>();
+            foreach(ChunkDetalization z in World.settings.detalization.GetDetalizations(World.CurChunkCoord))
             {
                 ModelChunk chunk = World.Model.ChunksGrid.GetChunk(z.chunkCoord);
                 if (!renderedChunks.ContainsKey(chunk))
                 {
-                    renderedChunks.Add(chunk, new TerrainRenderChunk(chunk, z.detalization, settings));
-                    SetNeighbors(chunk, true);
+                    RenderNewChunk(chunk, z.detalization);
                 }
             }
         }
@@ -72,17 +241,44 @@ namespace World.Render
         {
             if (!renderedChunks.ContainsKey(chunk))
                 return;
+            if (!(renderedChunks[chunk] is TerrainRenderedChunk))
+                return;
             ModelChunk top = ChunksNavigator.TopNeighbor(chunk);
             ModelChunk right = ChunksNavigator.RightNeighbor(chunk);
             ModelChunk down = ChunksNavigator.DownNeighbor(chunk);
             ModelChunk left = ChunksNavigator.LeftNeighbor(chunk);
 
-            Terrain topTerrain = renderedChunks.ContainsKey(top) ? renderedChunks[top].TerrainComponent : null;
-            Terrain rightTerrain = renderedChunks.ContainsKey(right) ? renderedChunks[right].TerrainComponent : null;
-            Terrain downTerrain = renderedChunks.ContainsKey(down) ? renderedChunks[down].TerrainComponent : null;
-            Terrain leftTerrain = renderedChunks.ContainsKey(left) ? renderedChunks[left].TerrainComponent : null;
+            Terrain topTerrain = null;
+            Terrain rightTerrain = null;
+            Terrain downTerrain = null;
+            Terrain leftTerrain = null;
+            if (renderedChunks.ContainsKey(top) &&
+                renderedChunks[top] is TerrainRenderedChunk &&
+                renderedChunks[top].Detalization == renderedChunks[chunk].Detalization)
+            {
+                topTerrain = (renderedChunks[top] as TerrainRenderedChunk).TerrainComponent;
+            }
+            if (renderedChunks.ContainsKey(right) &&
+                renderedChunks[right] is TerrainRenderedChunk &&
+                renderedChunks[right].Detalization == renderedChunks[chunk].Detalization)
+            {
+                rightTerrain = (renderedChunks[right] as TerrainRenderedChunk).TerrainComponent;
+            }
+            if (renderedChunks.ContainsKey(down) &&
+                renderedChunks[down] is TerrainRenderedChunk &&
+                renderedChunks[down].Detalization == renderedChunks[chunk].Detalization)
+            {
+                downTerrain = (renderedChunks[down] as TerrainRenderedChunk).TerrainComponent;
+            }
+            if (renderedChunks.ContainsKey(left) &&
+                renderedChunks[left] is TerrainRenderedChunk &&
+                renderedChunks[left].Detalization == renderedChunks[chunk].Detalization)
+            {
+                leftTerrain = (renderedChunks[left] as TerrainRenderedChunk).TerrainComponent;
+            }
 
-            renderedChunks[chunk].TerrainComponent.SetNeighbors(leftTerrain, topTerrain, rightTerrain, downTerrain);
+            (renderedChunks[chunk] as TerrainRenderedChunk).TerrainComponent.SetNeighbors(leftTerrain, topTerrain, rightTerrain, downTerrain);
+            (renderedChunks[chunk] as TerrainRenderedChunk).TerrainComponent.Flush();
             if (rec)
             {
                 SetNeighbors(top, false);
@@ -91,6 +287,5 @@ namespace World.Render
                 SetNeighbors(left, false);
             }
         }
-
     }
 }

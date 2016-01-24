@@ -108,7 +108,6 @@ namespace World.Instance
                 player.transform.position.z));
             if (!curCoord.Equals(LastCoord))
             {
-                WorldGenerator.PlayerMovedInModel(LastCoord, curCoord);
                 LastCoord = curCoord;
             }
             if (!CurChunkCoord.Equals(LastChunkCoord))

@@ -1,10 +1,12 @@
 ﻿using System;
 using World.Model.Frames;
+using World.Common;
 
 namespace World.Model.Chunks
 {
     /// <summary>
     /// Class wrapper for world model. It allows access by chunk.
+    /// Chunk edges are stitching
     /// </summary>
     public class ChunkGrid
     {
@@ -19,6 +21,8 @@ namespace World.Model.Chunks
         {
             Model = model;
             ChunkSize = chunkSize;
+            if (Pow2.GetLog2(ChunkSize - 1) == -1)
+                throw new ArgumentException("Chunk size must be 2^k + 1");
         }
 
         /// <summary>
@@ -26,7 +30,7 @@ namespace World.Model.Chunks
         /// </summary>
         public ModelChunk GetChunk(ModelCoord chunkCoord)
         {
-            SquareFrame frame = new SquareFrame(new ModelCoord(chunkCoord.x * ChunkSize, chunkCoord.y * ChunkSize), 
+            SquareFrame frame = new SquareFrame(new ModelCoord(chunkCoord.x * (ChunkSize - 1), chunkCoord.y * (ChunkSize - 1)), 
                 ChunkSize);
             return new ModelChunk(chunkCoord, frame, Model);
         }

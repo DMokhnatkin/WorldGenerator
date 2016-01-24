@@ -38,44 +38,5 @@ namespace World.Model
             Id = detalization;
             CoordOffset = Pow2.GetPow2(WorldModel.MaxDetalizationLayerId - Id);
         }
-
-        /// <summary>
-        /// Does world model contains point
-        /// </summary>
-        public bool Contains(ModelCoord coordInLayer)
-        {
-            return (WorldModel.Contains(coordInLayer));
-        }
-
-        /// <summary>
-        /// Get point by coordinates in cur layer. If point isn't exists return null.
-        /// </summary>
-        public ModelPoint this[ModelCoord coordInLayer]
-        {
-            get
-            {
-                ModelCoord normalCoord = LayerToNormal(coordInLayer);
-                return WorldModel[normalCoord];
-            }
-        }
-
-        /// <summary>
-        /// Create point by coordinates in cur layer.
-        /// </summary>
-        public ModelPoint CreatePoint(ModelCoord coordInLayer)
-        {
-            ModelCoord normalCoord = LayerToNormal(coordInLayer);
-            return WorldModel.CreatePoint(normalCoord);
-        }
-
-        /// <summary>
-        /// Get point by coordinates in cur layer. If point isn't exists create it.
-        /// </summary>
-        public ModelPoint GetOrCreatePoint(ModelCoord coordInLayer)
-        {
-            ModelCoord normalCoord = LayerToNormal(coordInLayer);
-            return WorldModel.GetOrCreatePoint(normalCoord);
-        }
-
     }
 }
