@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using World.Instance;
 using World.Model;
-using World.Model.Frames;
 using World.Common;
-using World.Model.Chunks;
+using World.DataStructures;
+using World.DataStructures.ChunksGrid;
 
 namespace World.Render
 {
@@ -21,12 +21,14 @@ namespace World.Render
         /// </summary>
         public WorldInstance World;
 
+        public WorldModel WorldModel { get { return World.Model; } }
+
         /// <summary>
         /// Settings for render
         /// </summary>
         public RenderSettings settings = new RenderSettings();
 
-        private Dictionary<ModelChunk, RenderedChunk> renderedChunks;
+        private Dictionary<Chunk, RenderedChunk> renderedChunks;
 
         public const float CHUNKS_IMPOSITION = 0.1f;
 
@@ -41,14 +43,14 @@ namespace World.Render
             /// <summary>
             /// Associated chunk
             /// </summary>
-            public ModelChunk Chunk { get; protected set; }
+            public Chunk Chunk { get; protected set; }
 
             /// <summary>
             /// Rendered detalizaton
             /// </summary>
             public int Detalization { get; protected set; }
 
-            public RenderedChunk(GameObject gameObject, ModelChunk chunk, int detalization)
+            public RenderedChunk(GameObject gameObject, Chunk chunk, int detalization)
             {
                 GameObject = gameObject;
                 Chunk = chunk;
@@ -66,7 +68,7 @@ namespace World.Render
             /// </summary>
             public Terrain TerrainComponent { get { return GameObject.GetComponent<Terrain>(); } }
 
-            public TerrainRenderedChunk(GameObject gameObject, ModelChunk chunk, int detalization) : 
+            public TerrainRenderedChunk(GameObject gameObject, Chunk chunk, int detalization) : 
                 base(gameObject, chunk, detalization)
             { }
         }
@@ -86,7 +88,7 @@ namespace World.Render
             /// </summary>
             public MeshFilter MeshFilterComponent { get { return GameObject.GetComponent<MeshFilter>(); } }
 
-            public MeshRenderedChunk(GameObject gameObject, ModelChunk chunk, int detalization) : 
+            public MeshRenderedChunk(GameObject gameObject, Chunk chunk, int detalization) : 
                 base(gameObject, chunk, detalization)
             {}
         }
@@ -95,25 +97,25 @@ namespace World.Render
         /// <summary>
         /// Render new chunk using terrain.
         /// </summary>
-        private void RenderNewTerrainChunk(ModelChunk chunk, int detalization)
+        private void RenderNewTerrainChunk(Chunk chunk, int detalization)
         {
-            if (chunk.GetSizeInLayer(detalization) < 33)
+            if (WorldModel.detalizationAccessor.GetSizeInLayer(chunk, detalization) < 33)
             {
                 throw new ArgumentException("Can't render chunk using terrain. Size in current detalization is less then 33");
             }
             TerrainRenderedChunk res;
             TerrainData data = new TerrainData();
-            float chunkSize = chunk.Model.CoordTransformer.ModelDistToGlobal(chunk.Size - 1);
+            float chunkSize = WorldModel.CoordTransformer.ModelDistToGlobal(chunk.Size - 1);
             // Terrain heights
-            data.heightmapResolution = chunk.GetSizeInLayer(detalization);
+            data.heightmapResolution = WorldModel.detalizationAccessor.GetSizeInLayer(chunk, detalization);
             float[,] heighmap = new float[data.heightmapWidth, data.heightmapHeight];
             for (int x = 0; x < data.heightmapWidth; x++)
                 for (int y = 0; y < data.heightmapHeight; y++)
                 {
-                    ModelPoint pt = chunk.GetPointInLayer(new ModelCoord(x, y), detalization);
-                    if (pt == null)
-                        throw new ArgumentException("Point in model is null");
-                    heighmap[y, x] = pt.Data.Height;
+                    heighmap[y, x] = World.Model.detalizationAccessor.GetData<float>(new IntCoord(x, y), 
+                        chunk, 
+                        World.Model.heighmap, 
+                        detalization);
                 }
             data.SetHeightsDelayLOD(0, 0, heighmap);
 
@@ -130,9 +132,9 @@ namespace World.Render
             // Create TerrainRenderChunk and add it to renderedChunks
             data.size = new Vector3(chunkSize, settings.worldHeight, chunkSize);
             res = new TerrainRenderedChunk(Terrain.CreateTerrainGameObject(data), chunk, detalization);
-            Vector2 chunkPos = chunk.Model.CoordTransformer.ModelCoordToGlobal(chunk.Frame.LeftDown);
+            Vector2 chunkPos = WorldModel.CoordTransformer.ModelCoordToGlobal(chunk.leftDown);
             res.GameObject.transform.position = new Vector3(chunkPos.x - chunkSize / 2.0f, 0, chunkPos.y - chunkSize / 2.0f);
-            res.GameObject.name = "Chunk " + chunk.Coord.ToString();
+            res.GameObject.name = "Chunk " + chunk.chunkCoord.ToString();
             renderedChunks.Add(chunk, res);
             res.TerrainComponent.ApplyDelayedHeightmapModification();
             return;
@@ -141,24 +143,26 @@ namespace World.Render
         /// <summary>
         /// Render new chunk using mesh.
         /// </summary>
-        private void RenderNewMeshChunk(ModelChunk chunk, int detalization)
+        private void RenderNewMeshChunk(Chunk chunk, int detalization)
         {
             MeshRenderedChunk res = new MeshRenderedChunk(
-                new GameObject("Chunk " + chunk.Coord.ToString(), typeof(MeshFilter), typeof(MeshRenderer)),
+                new GameObject("Chunk " + chunk.leftDown.ToString(), typeof(MeshFilter), typeof(MeshRenderer)),
                 chunk, 
                 detalization);
+            res.GameObject.isStatic = true;
 
-            float chunkSize = chunk.Model.CoordTransformer.ModelDistToGlobal(chunk.Size - 1);
+            float chunkSize = WorldModel.CoordTransformer.ModelDistToGlobal(chunk.Size - 1);
             res.MeshFilterComponent.mesh = new Mesh();
-            int sizeInLayer = chunk.GetSizeInLayer(detalization);
+            int sizeInLayer = WorldModel.detalizationAccessor.GetSizeInLayer(chunk, detalization);
 
             // Generate mesh
             List<Vector3> vertices = new List<Vector3>();
             List<int> triangles = new List<int>();
-            foreach (ModelPoint z in chunk.GetPointsInLayer(detalization))
+            foreach (IntCoord baseCoord in World.Model.detalizationAccessor.GetBaseCoordsInLayer(chunk, detalization))
             {
-                Vector2 pos = chunk.Model.CoordTransformer.ModelCoordToGlobal(z.NormalCoord);
-                vertices.Add(new Vector3(pos.x - chunkSize / 2.0f, z.Data.Height * settings.worldHeight, pos.y - chunkSize / 2.0f));
+                float data = World.Model.detalizationAccessor.GetData<float>(baseCoord, World.Model.heighmap, detalization);
+                Vector2 pos = World.Model.CoordTransformer.ModelCoordToGlobal(baseCoord);
+                vertices.Add(new Vector3(pos.x - chunkSize / 2.0f, data * settings.worldHeight, pos.y - chunkSize / 2.0f));
                 int v0 = vertices.Count - 1;
                 int v1 = vertices.Count - 2;
                 int v2 = vertices.Count - 1 - sizeInLayer;
@@ -189,21 +193,21 @@ namespace World.Render
         /// <summary>
         /// Render new chunk. (chunk shouldn't be rendered before)
         /// </summary>
-        private void RenderNewChunk(ModelChunk chunk, int detalization)
+        private void RenderNewChunk(Chunk chunk, int detalization)
         {
             if (renderedChunks.ContainsKey(chunk))
                 throw new ArgumentException("Chunk was rendered before");
             if (detalization < 0 ||
-                detalization > World.Model.MaxDetalizationLayerId)
+                detalization >= World.Model.detalizationAccessor.detalizationLayersCount)
                 throw new ArgumentException("Forbidden detalization(" + detalization + ")");
             // Can we use unity terrain?
             // Min terrain heighmap resolution = 33
-            if (chunk.GetSizeInLayer(detalization) >= 33)
+            if (World.Model.detalizationAccessor.GetSizeInLayer(chunk, detalization) >= 33)
             {
                 RenderNewTerrainChunk(chunk, detalization);
                 SetNeighbors(chunk, true);
             }
-            if (chunk.GetSizeInLayer(detalization) < 33)
+            if (World.Model.detalizationAccessor.GetSizeInLayer(chunk, detalization) < 33)
             {
                 RenderNewMeshChunk(chunk, detalization);
             }
@@ -212,7 +216,7 @@ namespace World.Render
         /// <summary>
         /// Listen player moved from chunk
         /// </summary>
-        public void PlayerChunkCoordChanged(ModelCoord prevChunkCoord, ModelCoord newChunkCoord)
+        public void PlayerChunkCoordChanged(IntCoord prevChunkCoord, IntCoord newChunkCoord)
         {
         }
 
@@ -221,10 +225,10 @@ namespace World.Render
         /// </summary>
         public void Initialize()
         {
-            renderedChunks = new Dictionary<ModelChunk, RenderedChunk>();
+            renderedChunks = new Dictionary<Chunk, RenderedChunk>();
             foreach(ChunkDetalization z in World.settings.detalization.GetDetalizations(World.CurChunkCoord))
             {
-                ModelChunk chunk = World.Model.ChunksGrid.GetChunk(z.chunkCoord);
+                Chunk chunk = World.Model.chunksNavigator.GetChunk(z.chunkCoord);
                 if (!renderedChunks.ContainsKey(chunk))
                 {
                     RenderNewChunk(chunk, z.detalization);
@@ -237,16 +241,16 @@ namespace World.Render
         /// </summary>
         /// <param name="chunk"></param>
         /// <param name="rec">If true for each neighbor will be setted neighbors too</param>
-        private void SetNeighbors(ModelChunk chunk, bool rec)
+        private void SetNeighbors(Chunk chunk, bool rec)
         {
             if (!renderedChunks.ContainsKey(chunk))
                 return;
             if (!(renderedChunks[chunk] is TerrainRenderedChunk))
                 return;
-            ModelChunk top = ChunksNavigator.TopNeighbor(chunk);
-            ModelChunk right = ChunksNavigator.RightNeighbor(chunk);
-            ModelChunk down = ChunksNavigator.DownNeighbor(chunk);
-            ModelChunk left = ChunksNavigator.LeftNeighbor(chunk);
+            Chunk top = World.Model.chunksNavigator.TopNeighbor(chunk);
+            Chunk right = World.Model.chunksNavigator.RightNeighbor(chunk);
+            Chunk down = World.Model.chunksNavigator.DownNeighbor(chunk);
+            Chunk left = World.Model.chunksNavigator.LeftNeighbor(chunk);
 
             Terrain topTerrain = null;
             Terrain rightTerrain = null;

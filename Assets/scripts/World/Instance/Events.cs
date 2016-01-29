@@ -1,4 +1,5 @@
 ﻿using System;
+using World.DataStructures;
 using World.Model;
 
 namespace World.Instance
@@ -8,10 +9,10 @@ namespace World.Instance
     /// </summary>
     public class CoordChangedArgs : EventArgs
     {
-        public ModelCoord PrevVal { get; private set; }
-        public ModelCoord NewVal { get; private set; }
+        public IntCoord PrevVal { get; private set; }
+        public IntCoord NewVal { get; private set; }
 
-        public CoordChangedArgs(ModelCoord prevVal, ModelCoord newVal)
+        public CoordChangedArgs(IntCoord prevVal, IntCoord newVal)
         {
             PrevVal = prevVal;
             NewVal = newVal;

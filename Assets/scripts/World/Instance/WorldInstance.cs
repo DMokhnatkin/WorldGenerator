@@ -5,8 +5,8 @@ using World.Model;
 using World.Generator;
 using World.Generator.Algorithms;
 using World.Render;
-using World.Model.Frames;
-using World.Model.Chunks;
+using World.DataStructures.ChunksGrid;
+using World.DataStructures;
 
 namespace World.Instance
 {
@@ -21,13 +21,7 @@ namespace World.Instance
         /// Last model coordinate, when world was updated.
         /// If current coord is not equals it we must update world
         /// </summary>
-        public ModelCoord LastCoord { get; private set; }
-
-        /// <summary>
-        /// Last model chunk coordinate, when we raised chunk coord changed.
-        /// If current chunk coord is not equals it we must raise chunk coord changed.
-        /// </summary>
-        public ModelCoord LastChunkCoord { get; private set; }
+        public IntCoord LastCoord { get; private set; }
 
         /// <summary>
         /// Player object. World will be generated and rendered around it.
@@ -57,7 +51,7 @@ namespace World.Instance
         /// <summary>
         /// Coordinate of current model point 
         /// </summary>
-        public ModelCoord CurModelCoord
+        public IntCoord CurModelCoord
         {
             get
             {
@@ -66,34 +60,14 @@ namespace World.Instance
             }
         }
 
-        /// <summary>
-        /// Current model point
-        /// </summary>
-        public ModelPoint CurModelPoint
-        {
-            get { return Model.GetOrCreatePoint(CurModelCoord); }
-        }
-
-        public ModelCoord CurChunkCoord
-        {
-            get { return Model.ChunksGrid.GetChunkByInnerCoord(CurModelCoord).Coord; }
-        }
-
-        /// <summary>
-        /// Get modelChunk in which player is now.
-        /// </summary>
-        public ModelChunk CurModelChunk
-        {
-            get { return Model.ChunksGrid.GetChunkByInnerCoord(CurModelCoord); }
-        }
+        public IntCoord CurChunkCoord { get; private set; }
 
         void Awake()
         {
             Model = new WorldModel(7, settings.baseCellSize, settings.chunkSize);
             WorldRender = GetComponent<WorldRender>();
             WorldGenerator = GetComponent<WorldGenerator>();
-            LastCoord = new ModelCoord(0, 0);
-            LastChunkCoord = new ModelCoord(0, 0);
+            LastCoord = new IntCoord(0, 0);
         }
 
         void Start()
@@ -104,16 +78,21 @@ namespace World.Instance
 
         void Update()
         {
-            ModelCoord curCoord = Model.CoordTransformer.GlobalCoordToModel(new Vector2(player.transform.position.x, 
+            IntCoord curCoord = Model.CoordTransformer.GlobalCoordToModel(new Vector2(player.transform.position.x, 
                 player.transform.position.z));
             if (!curCoord.Equals(LastCoord))
             {
                 LastCoord = curCoord;
-            }
-            if (!CurChunkCoord.Equals(LastChunkCoord))
-            {
-                WorldRender.PlayerChunkCoordChanged(LastChunkCoord, CurChunkCoord);
-                LastChunkCoord = CurChunkCoord;
+                if (curCoord.x > (CurChunkCoord.x + 1) * (settings.chunkSize - 1))
+                {
+                    CurChunkCoord = CurChunkCoord.Right;
+                    WorldRender.PlayerChunkCoordChanged(CurChunkCoord.Left, CurChunkCoord);
+                }
+                if (curCoord.x < CurChunkCoord.x * (settings.chunkSize - 1))
+                {
+                    CurChunkCoord = CurChunkCoord.Left;
+                    WorldRender.PlayerChunkCoordChanged(CurChunkCoord.Right, CurChunkCoord);
+                }
             }
         }
     }

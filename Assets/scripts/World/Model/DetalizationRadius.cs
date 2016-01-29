@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using World.DataStructures;
 
 namespace World.Model
 {
     public struct ChunkDetalization
     {
-        public readonly ModelCoord chunkCoord;
+        public readonly IntCoord chunkCoord;
         public readonly int detalization;
 
-        public ChunkDetalization(ModelCoord chunkCoord, int detalization)
+        public ChunkDetalization(IntCoord chunkCoord, int detalization)
         {
             this.chunkCoord = chunkCoord;
             this.detalization = detalization;
@@ -58,12 +59,12 @@ namespace World.Model
         /// <summary>
         /// Get detalization for chunks around specifed cgunk
         /// </summary>
-        public IEnumerable<ChunkDetalization> GetDetalizations(ModelCoord curChunkCoord)
+        public IEnumerable<ChunkDetalization> GetDetalizations(IntCoord curChunkCoord)
         {
             for (int x = curChunkCoord.x - data[data.Length - 1]; x <= curChunkCoord.x + data[data.Length - 1]; x++)
                 for (int y = curChunkCoord.y - data[data.Length - 1]; y <= curChunkCoord.y + data[data.Length - 1]; y++)
                 {
-                    yield return new ChunkDetalization(new ModelCoord(x, y),
+                    yield return new ChunkDetalization(new IntCoord(x, y),
                         GetDetalization((int)Math.Sqrt(Math.Pow(x - curChunkCoord.x, 2) +
                             Math.Pow(y - curChunkCoord.y, 2))));
                 }
@@ -75,7 +76,7 @@ namespace World.Model
         /// </summary>
         /// <param name="prevChunkCoord">Previous chunk coordinate when detalizations was updated</param>
         /// <param name="curChunkCoord">Current chunk coordinate</param>
-        public IEnumerable<ChunkDetalization> GetChunksWithIncreasedDetalization(ModelCoord prevChunkCoord, ModelCoord curChunkCoord)
+        public IEnumerable<ChunkDetalization> GetChunksWithIncreasedDetalization(IntCoord prevChunkCoord, IntCoord curChunkCoord)
         {
             if (curChunkCoord.Equals(prevChunkCoord.Top))
             {
@@ -84,7 +85,7 @@ namespace World.Model
                 {
                     for (int x = curChunkCoord.x - data[i]; x <= curChunkCoord.x + data[i]; x++)
                     {
-                        yield return new ChunkDetalization(new ModelCoord(x, curChunkCoord.y + data[i]), data.Length - i);
+                        yield return new ChunkDetalization(new IntCoord(x, curChunkCoord.y + data[i]), data.Length - i);
                     }
                 }
                 yield break;
@@ -96,7 +97,7 @@ namespace World.Model
                 {
                     for (int y = curChunkCoord.y - data[i]; y <= curChunkCoord.y + data[i]; y++)
                     {
-                        yield return new ChunkDetalization(new ModelCoord(curChunkCoord.x + data[i], y), data.Length - i);
+                        yield return new ChunkDetalization(new IntCoord(curChunkCoord.x + data[i], y), data.Length - i);
                     }
                 }
                 yield break;
@@ -108,7 +109,7 @@ namespace World.Model
                 {
                     for (int x = curChunkCoord.x - data[i]; x <= curChunkCoord.x + data[i]; x++)
                     {
-                        yield return new ChunkDetalization(new ModelCoord(x, curChunkCoord.y - data[i]), data.Length - i);
+                        yield return new ChunkDetalization(new IntCoord(x, curChunkCoord.y - data[i]), data.Length - i);
                     }
                 }
                 yield break;
@@ -120,7 +121,7 @@ namespace World.Model
                 {
                     for (int y = curChunkCoord.y - data[i]; y <= curChunkCoord.y + data[i]; y++)
                     {
-                        yield return new ChunkDetalization(new ModelCoord(curChunkCoord.x - data[i], y), data.Length - i);
+                        yield return new ChunkDetalization(new IntCoord(curChunkCoord.x - data[i], y), data.Length - i);
                     }
                 }
                 yield break;

@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using World.Common;
+using World.DataStructures;
 using World.Model;
 
 namespace World.Model
@@ -29,7 +30,7 @@ namespace World.Model
         /// <summary>
         /// Transform normal model coordinate to world space coordinate
         /// </summary>
-        public Vector2 ModelCoordToGlobal(ModelCoord normalCoord)
+        public Vector2 ModelCoordToGlobal(IntCoord normalCoord)
         {
             return new Vector2(normalCoord.x * ModelUnitWidth, normalCoord.y * ModelUnitWidth);
         }
@@ -45,18 +46,18 @@ namespace World.Model
         /// <summary>
         /// Transform global coordinate to nearest model coordinate
         /// </summary>
-        public ModelCoord GlobalCoordToModel(Vector2 coord)
+        public IntCoord GlobalCoordToModel(Vector2 coord)
         {
-            return new ModelCoord((int)Math.Round(coord.x / ModelUnitWidth), 
+            return new IntCoord((int)Math.Round(coord.x / ModelUnitWidth), 
                 (int)Math.Round(coord.y / ModelUnitWidth));
         }
 
         /// <summary>
         /// Transform world distance to model distance in specified layer
         /// </summary>
-        public float GlobalDistToModel(float dist, WorldModelLayer layer)
+        public float GlobalDistToModel(float dist, int layer)
         {
-            return dist / (ModelUnitWidth * Pow2.GetPow2(layer.WorldModel.MaxDetalizationLayer.Id - layer.Id));
+            return dist / (ModelUnitWidth * Model.detalizationAccessor.GetCoordOffsetInLayer(layer));
         }
 
         /// <summary>

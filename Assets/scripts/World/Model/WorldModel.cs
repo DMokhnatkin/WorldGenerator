@@ -1,120 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
-using World.Model.Frames;
 using World.Common;
-using World.Model.Chunks;
+using World.DataStructures.ChunksGrid;
 
 namespace World.Model
 {
     public class WorldModel
     {
         /// <summary>
-        /// Layers of detalization
+        /// Grid of chunks
         /// </summary>
-        WorldModelLayer[] detalizationLayers;
+        public readonly ChunksNavigator chunksNavigator;
 
         /// <summary>
-        /// All points and their normal coordinates
+        /// Heighmap of world
         /// </summary>
-        internal Dictionary<ModelCoord, ModelPoint> Points { get; set; }
+        public readonly PointsStorage<float> heighmap;
+
+        /// <summary>
+        /// To access to coords in chunks by detalization layers
+        /// </summary>
+        public readonly DetalizationAccessor detalizationAccessor;
 
         /// <summary>
         /// Transform model coordinates to global(Unity) and back
         /// </summary>
         public CoordTransformer CoordTransformer { get; private set; }
 
-        /// <summary>
-        /// To access to model by chunks
-        /// </summary>
-        public ChunkGrid ChunksGrid { get; private set; }
-
         public WorldModel(int detalizationLayerCount, float modelUnitWidth, int chunkSize)
         {
-            detalizationLayers = new WorldModelLayer[detalizationLayerCount];
-            // Reverse because we use maxDetalizationLayer to initialize other layers(we calculate lauer offset using int) 
-            for (int i = detalizationLayerCount - 1; i >= 0; i--)
-                detalizationLayers[i] = new WorldModelLayer(this, i);
-            Points = new Dictionary<ModelCoord, ModelPoint>();
+            chunksNavigator = new ChunksNavigator(chunkSize);
+            heighmap = new PointsStorage<float>();
+            detalizationAccessor = new DetalizationAccessor(detalizationLayerCount);
             CoordTransformer = new CoordTransformer(this, modelUnitWidth);
-            ChunksGrid = new ChunkGrid(this, chunkSize);
-        }
-
-        /// <summary>
-        /// Get layer with max detalization(in this layer layerCoord = normlalCoord)
-        /// </summary>
-        public WorldModelLayer MaxDetalizationLayer
-        {
-            get { return detalizationLayers[detalizationLayers.Length - 1]; }
-        }
-
-        /// <summary>
-        /// Get layer max detalization
-        /// </summary>
-        public int MaxDetalizationLayerId
-        {
-            get { return detalizationLayers.Length - 1; }
-        }
-
-        /// <summary>
-        /// Get detalization layer by it's detalization coefficient
-        /// </summary>
-        public WorldModelLayer GetLayer(int detalizationLayer)
-        {
-            if (detalizationLayer >= detalizationLayers.Length)
-                throw new ArgumentException("There is no detalization layer " + detalizationLayer);
-            return detalizationLayers[detalizationLayer];
-        }
-
-        /// <summary>
-        /// Does model contains point with specifed normal coord
-        /// </summary>
-        public bool Contains(ModelCoord normalCoord)
-        {
-            return (Points.ContainsKey(normalCoord));
-        }
-
-        /// <summary>
-        /// Get of set modelPoint by normal coordinate(coordinate in max layer detalization) 
-        /// </summary>
-        public ModelPoint this[ModelCoord normalCoord]
-        {
-            get
-            {
-                if (Points.ContainsKey(normalCoord))
-                    return Points[normalCoord];
-                return null;
-            }
-        }
-
-        public ModelPoint CreatePoint(ModelCoord normalCoord)
-        {
-            if (Points.ContainsKey(normalCoord))
-                throw new ArgumentException(String.Format("Point {0} already created", normalCoord.ToString()));
-            Points.Add(normalCoord, new ModelPoint(normalCoord));
-            return Points[normalCoord];
-        }
-
-        /// <summary>
-        /// If point exists return it.
-        /// If point isn't exists create it and then return 
-        /// </summary>
-        public ModelPoint GetOrCreatePoint(ModelCoord normalCoord)
-        {
-            if (!Points.ContainsKey(normalCoord))
-                return CreatePoint(normalCoord);
-            return this[normalCoord];
-        }
-
-        /// <summary>
-        /// Initialize points in specifed frame
-        /// </summary>
-        public void CreatePoints(IFrame frame)
-        {
-            foreach (ModelCoord z in frame.GetCoords())
-            {
-                if (!Contains(z))
-                    CreatePoint(z);
-            }
         }
     }
 }

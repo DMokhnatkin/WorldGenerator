@@ -1,13 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-namespace World.Model
+namespace World.DataStructures
 {
-    public class ModelCoord : IEqualityComparer<ModelCoord>
+    /// <summary>
+    /// Represents coordinate(x,y) where x and y are integers
+    /// </summary>
+    public struct IntCoord : IEqualityComparer<IntCoord>
     {
         public readonly int x;
         public readonly int y;
 
-        public ModelCoord(int x, int y)
+        public IntCoord(int x, int y)
         {
             this.x = x;
             this.y = y;
@@ -15,7 +19,7 @@ namespace World.Model
 
         public override bool Equals(object obj)
         {
-            return x == ((ModelCoord)obj).x && y == ((ModelCoord)obj).y;
+            return x == ((IntCoord)obj).x && y == ((IntCoord)obj).y;
         }
 
         public override int GetHashCode()
@@ -23,12 +27,12 @@ namespace World.Model
             return x * y + x;
         }
 
-        public bool Equals(ModelCoord x, ModelCoord y)
+        public bool Equals(IntCoord x, IntCoord y)
         {
             return x.Equals(y);
         }
 
-        public int GetHashCode(ModelCoord obj)
+        public int GetHashCode(IntCoord obj)
         {
             return obj.GetHashCode();
         }
@@ -36,33 +40,33 @@ namespace World.Model
         /// <summary>
         /// Top neighbor
         /// </summary>
-        public ModelCoord Top
+        public IntCoord Top
         {
-            get { return new ModelCoord(x, y + 1); }
+            get { return new IntCoord(x, y + 1); }
         }
 
         /// <summary>
         /// Right neighbor
         /// </summary>
-        public ModelCoord Right
+        public IntCoord Right
         {
-            get { return new ModelCoord(x + 1, y); }
+            get { return new IntCoord(x + 1, y); }
         }
 
         /// <summary>
         /// Down neighbor
         /// </summary>
-        public ModelCoord Down
+        public IntCoord Down
         {
-            get { return new ModelCoord(x, y - 1); }
+            get { return new IntCoord(x, y - 1); }
         }
 
         /// <summary>
         /// Left neighbor
         /// </summary>
-        public ModelCoord Left
+        public IntCoord Left
         {
-            get { return new ModelCoord(x - 1, y); }
+            get { return new IntCoord(x - 1, y); }
         }
 
         public override string ToString()
