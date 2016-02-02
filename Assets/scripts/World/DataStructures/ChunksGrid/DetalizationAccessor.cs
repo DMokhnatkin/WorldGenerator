@@ -11,13 +11,23 @@ namespace World.DataStructures.ChunksGrid
     public class DetalizationAccessor
     {
         /// <summary>
-        /// Count of detalization layers
+        /// Count of detalization layers. (2^detalizationLayersCount + 1 = chunkSize)
         /// </summary>
         public readonly int detalizationLayersCount;
 
-        public DetalizationAccessor(int detalizationLayersCount)
+        /// <summary>
+        /// Calculate count of detalization layers for specifed chunk size
+        /// </summary>
+        public static int CalcLayersCount(int chunkSize)
         {
-            this.detalizationLayersCount = detalizationLayersCount;
+            if (Pow2.GetLog2(chunkSize - 1) == -1)
+                throw new ArgumentException("Invalid chunk size (must be 2^n + 1)");
+            return Pow2.GetLog2(chunkSize - 1) + 1;
+        }
+
+        public DetalizationAccessor(ChunksNavigator chunksNavigator)
+        {
+            detalizationLayersCount = CalcLayersCount(chunksNavigator.chunkSize);
         }
 
         /// <summary>
@@ -25,7 +35,7 @@ namespace World.DataStructures.ChunksGrid
         /// </summary>
         public int GetCoordOffsetInLayer(int layerId)
         {
-            return (Pow2.GetPow2(detalizationLayersCount - layerId - 1));
+            return Pow2.GetPow2(detalizationLayersCount - layerId - 1);
         }
 
         /// <summary>
@@ -45,10 +55,10 @@ namespace World.DataStructures.ChunksGrid
         /// Get data by coord in specifed layer in specifed chunk
         /// </summary>
         /// <param name="coordInChunk">Coordinate of point in chunk (0,0 - leftDownCornerOfChunk)</param>
-        public T GetData<T>(IntCoord coordInChunk, Chunk chunk, PointsStorage<T> pointsStorage, int layerIf)
+        public T GetData<T>(IntCoord coordInChunk, Chunk chunk, PointsStorage<T> pointsStorage, int layerId)
         {
-            IntCoord coord = new IntCoord(chunk.LeftBorder + coordInChunk.x * GetCoordOffsetInLayer(layerIf), 
-                chunk.DownBorder + coordInChunk.y * GetCoordOffsetInLayer(layerIf));
+            IntCoord coord = new IntCoord(chunk.LeftBorder + coordInChunk.x * GetCoordOffsetInLayer(layerId), 
+                chunk.DownBorder + coordInChunk.y * GetCoordOffsetInLayer(layerId));
             return pointsStorage[coord];
         }
 
@@ -61,6 +71,14 @@ namespace World.DataStructures.ChunksGrid
             IntCoord coord = new IntCoord(coordInLayer.x * GetCoordOffsetInLayer(layerId),
                 coordInLayer.y * GetCoordOffsetInLayer(layerId));
             return pointsStorage[coord];
+        }
+
+        /// <summary>
+        /// Get data by base coord
+        /// </summary>
+        public T GetData<T>(IntCoord baseCoord, PointsStorage<T> pointsStorage)
+        {
+            return pointsStorage[baseCoord];
         }
 
         /// <summary>
@@ -80,7 +98,7 @@ namespace World.DataStructures.ChunksGrid
         /// </summary>
         public int GetSizeInLayer(Chunk chunk, int layerId)
         {
-            return (chunk.Size / (GetCoordOffsetInLayer(layerId)));
+            return ((chunk.Size - 1) / (GetCoordOffsetInLayer(layerId)) + 1);
         }
     }
 }

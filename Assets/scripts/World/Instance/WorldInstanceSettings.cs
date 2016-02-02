@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 using World.Model;
+using World.DataStructures.ChunksGrid;
 
 namespace World.Instance
 {
@@ -22,6 +23,6 @@ namespace World.Instance
         /// </summary>
         public float height = 500;
 
-        public DetalizationRadius detalization = new DetalizationRadius(6);
+        public DetalizationRadius detalization = new DetalizationRadius(8);
     }
 }

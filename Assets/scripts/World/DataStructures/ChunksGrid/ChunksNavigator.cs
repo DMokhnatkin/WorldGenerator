@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using World.Common;
 
 namespace World.DataStructures.ChunksGrid
 {
@@ -9,12 +10,14 @@ namespace World.DataStructures.ChunksGrid
     public class ChunksNavigator
     {
         /// <summary>
-        /// Size of chunk
+        /// Size of chunk, always 2^n + 1
         /// </summary>
         public readonly int chunkSize;
 
         public ChunksNavigator(int chunkSize)
         {
+            if (Pow2.GetLog2(chunkSize - 1) == -1)
+                throw new ArgumentException("Chunk size must be 2^n + 1");
             this.chunkSize = chunkSize;
         }
 

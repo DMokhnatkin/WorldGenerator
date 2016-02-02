@@ -109,8 +109,8 @@ namespace World.Render
             // Terrain heights
             data.heightmapResolution = WorldModel.detalizationAccessor.GetSizeInLayer(chunk, detalization);
             float[,] heighmap = new float[data.heightmapWidth, data.heightmapHeight];
-            for (int x = 0; x < data.heightmapWidth; x++)
-                for (int y = 0; y < data.heightmapHeight; y++)
+            for (int x = 0; x < data.heightmapHeight; x++)
+                for (int y = 0; y < data.heightmapWidth; y++)
                 {
                     heighmap[y, x] = World.Model.detalizationAccessor.GetData<float>(new IntCoord(x, y), 
                         chunk, 
@@ -146,7 +146,7 @@ namespace World.Render
         private void RenderNewMeshChunk(Chunk chunk, int detalization)
         {
             MeshRenderedChunk res = new MeshRenderedChunk(
-                new GameObject("Chunk " + chunk.leftDown.ToString(), typeof(MeshFilter), typeof(MeshRenderer)),
+                new GameObject("Chunk " + chunk.chunkCoord.ToString(), typeof(MeshFilter), typeof(MeshRenderer)),
                 chunk, 
                 detalization);
             res.GameObject.isStatic = true;
@@ -160,7 +160,7 @@ namespace World.Render
             List<int> triangles = new List<int>();
             foreach (IntCoord baseCoord in World.Model.detalizationAccessor.GetBaseCoordsInLayer(chunk, detalization))
             {
-                float data = World.Model.detalizationAccessor.GetData<float>(baseCoord, World.Model.heighmap, detalization);
+                float data = World.Model.detalizationAccessor.GetData<float>(baseCoord, World.Model.heighmap);
                 Vector2 pos = World.Model.CoordTransformer.ModelCoordToGlobal(baseCoord);
                 vertices.Add(new Vector3(pos.x - chunkSize / 2.0f, data * settings.worldHeight, pos.y - chunkSize / 2.0f));
                 int v0 = vertices.Count - 1;

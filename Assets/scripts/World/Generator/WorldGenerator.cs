@@ -51,6 +51,8 @@ namespace World.Generator
         /// <param name="pt"></param>
         private void GeneratePoint(IntCoord baseCoord)
         {
+            if (!worldInstance.Model.heighmap.Contains(baseCoord))
+                worldInstance.Model.heighmap.Initialize(baseCoord);
             Vector2 pos = worldInstance.Model.CoordTransformer.ModelCoordToGlobal(baseCoord);
             worldInstance.Model.heighmap[baseCoord] = Mathf.PerlinNoise(seed1.x + 0.0001f * pos.x + eps, seed1.y + 0.0001f * pos.y + eps) *
                 Mathf.PerlinNoise(seed1.x + 0.001f * pos.x + eps, seed1.y + 0.001f * pos.y + eps) * 0.7f;
@@ -63,7 +65,6 @@ namespace World.Generator
 
         private void GenerateChunk(Chunk chunk, int detalization)
         {
-            worldInstance.Model.heighmap.Initialize(chunk);
             foreach (IntCoord z in worldInstance.Model.detalizationAccessor.GetBaseCoordsInLayer(chunk, detalization))
                 GeneratePoint(z);
         }

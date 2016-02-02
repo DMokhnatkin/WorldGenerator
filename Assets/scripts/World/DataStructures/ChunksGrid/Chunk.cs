@@ -27,9 +27,9 @@ namespace World.DataStructures.ChunksGrid
 
         public int RightBorder { get { return leftDown.x + Size - 1; } }
 
-        public int DownBorder { get { return leftDown.x; } }
+        public int DownBorder { get { return leftDown.y; } }
 
-        public int LeftBorder { get { return leftDown.y; } }
+        public int LeftBorder { get { return leftDown.x; } }
 
         /// <summary>
         /// Size of chunk

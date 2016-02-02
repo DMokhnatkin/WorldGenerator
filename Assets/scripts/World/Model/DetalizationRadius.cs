@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using World.DataStructures;
+using World.DataStructures.ChunksGrid;
 
 namespace World.Model
 {
@@ -51,9 +52,13 @@ namespace World.Model
             return data.Length - BinarySearch(0, data.Length, distance);
         }
 
-        public DetalizationRadius(int maxDetalization)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="detalizationLayersCount">Must be layers count - 1</param>
+        public DetalizationRadius(int detalizationLayersCount)
         {
-            data = new int[maxDetalization];
+            data = new int[detalizationLayersCount];
         }
 
         /// <summary>

@@ -64,7 +64,7 @@ namespace World.Instance
 
         void Awake()
         {
-            Model = new WorldModel(7, settings.baseCellSize, settings.chunkSize);
+            Model = new WorldModel(settings.baseCellSize, settings.chunkSize);
             WorldRender = GetComponent<WorldRender>();
             WorldGenerator = GetComponent<WorldGenerator>();
             LastCoord = new IntCoord(0, 0);
@@ -72,6 +72,9 @@ namespace World.Instance
 
         void Start()
         {
+            // TODO: fix this
+            if (settings.detalization.data.Length + 1 != Model.detalizationAccessor.detalizationLayersCount)
+                Debug.LogError("Detalization layers count are incorrect");
             WorldGenerator.Initialize();
             WorldRender.Initialize();
         }

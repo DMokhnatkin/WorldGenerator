@@ -27,11 +27,11 @@ namespace World.Model
         /// </summary>
         public CoordTransformer CoordTransformer { get; private set; }
 
-        public WorldModel(int detalizationLayerCount, float modelUnitWidth, int chunkSize)
+        public WorldModel(float modelUnitWidth, int chunkSize)
         {
             chunksNavigator = new ChunksNavigator(chunkSize);
             heighmap = new PointsStorage<float>();
-            detalizationAccessor = new DetalizationAccessor(detalizationLayerCount);
+            detalizationAccessor = new DetalizationAccessor(chunksNavigator);
             CoordTransformer = new CoordTransformer(this, modelUnitWidth);
         }
     }
