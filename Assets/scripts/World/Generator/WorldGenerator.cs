@@ -63,7 +63,7 @@ namespace World.Generator
             //        perlin2d.Noise(0.0005f * coord.x + eps, 0.0005f * coord.y + eps, 10) * 0.2f;
         }
 
-        private void GenerateChunk(Chunk chunk, int detalization)
+        public void GenerateChunk(Chunk chunk, int detalization)
         {
             foreach (IntCoord z in worldInstance.Model.detalizationAccessor.GetBaseCoordsInLayer(chunk, detalization))
                 GeneratePoint(z);
@@ -74,7 +74,7 @@ namespace World.Generator
         /// </summary>
         public void Initialize()
         {
-            foreach (ChunkDetalization z in worldInstance.settings.detalization.GetDetalizations(worldInstance.CurChunkCoord))
+            foreach (ChunkDetalization z in worldInstance.settings.detalization.GetDetalizations(worldInstance.CurChunk.chunkCoord))
             {
                 GenerateChunk(worldInstance.Model.chunksNavigator.GetChunk(z.chunkCoord), z.detalization);
             }

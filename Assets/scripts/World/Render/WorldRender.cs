@@ -6,6 +6,7 @@ using World.Model;
 using World.Common;
 using World.DataStructures;
 using World.DataStructures.ChunksGrid;
+using System.Collections;
 
 namespace World.Render
 {
@@ -56,6 +57,11 @@ namespace World.Render
                 Chunk = chunk;
                 Detalization = detalization;
             }
+
+            public void Destroy()
+            {
+                GameObject.Destroy(GameObject);
+            }
         }
 
         /// <summary>
@@ -88,11 +94,57 @@ namespace World.Render
             /// </summary>
             public MeshFilter MeshFilterComponent { get { return GameObject.GetComponent<MeshFilter>(); } }
 
+            /// <summary>
+            /// Associated LodGroup component 
+            /// </summary>
+            public LODGroup LodGroupComponent { get { return GameObject.GetComponent<LODGroup>(); } }
+
             public MeshRenderedChunk(GameObject gameObject, Chunk chunk, int detalization) : 
                 base(gameObject, chunk, detalization)
             {}
         }
         #endregion
+
+        /// <summary>
+        /// Increase detalization
+        /// </summary>
+        private void IncreaseTerrainChunkDetalization(TerrainRenderedChunk renderedChunk, int newDetalization)
+        {
+            renderedChunks[renderedChunk.Chunk].Destroy();
+            renderedChunks.Remove(renderedChunk.Chunk);
+            RenderNewChunk(renderedChunk.Chunk, newDetalization);
+        }
+
+        /// <summary>
+        /// Increase detalization for MeshRenderedChunk
+        /// </summary>
+        private void IncreaseMeshChunkDetalization(MeshRenderedChunk renderedChunk, int newDetalization)
+        {
+            if (World.Model.detalizationAccessor.GetSizeInLayer(renderedChunk.Chunk, newDetalization) >= 33)
+            {
+                // Change this rendered chunk to TerrainRenderedChunk
+                renderedChunks[renderedChunk.Chunk].Destroy();
+                renderedChunks.Remove(renderedChunk.Chunk);
+                RenderNewChunk(renderedChunk.Chunk, newDetalization);
+            }
+        }
+
+        /// <summary>
+        /// Increase detalization of RenderedChunk
+        /// </summary>
+        private void IncreaseChunkDetalization(RenderedChunk renderedChunk, int newDetalization)
+        {
+            if (renderedChunk is TerrainRenderedChunk)
+            {
+                IncreaseTerrainChunkDetalization(renderedChunk as TerrainRenderedChunk, newDetalization);
+                return;
+            }
+            if (renderedChunk is MeshRenderedChunk)
+            {
+                IncreaseMeshChunkDetalization(renderedChunk as MeshRenderedChunk, newDetalization);
+                return;
+            }
+        }
 
         /// <summary>
         /// Render new chunk using terrain.
@@ -146,7 +198,8 @@ namespace World.Render
         private void RenderNewMeshChunk(Chunk chunk, int detalization)
         {
             MeshRenderedChunk res = new MeshRenderedChunk(
-                new GameObject("Chunk " + chunk.chunkCoord.ToString(), typeof(MeshFilter), typeof(MeshRenderer)),
+                new GameObject("Chunk " + chunk.chunkCoord.ToString(), 
+                    typeof(MeshFilter), typeof(MeshRenderer)),
                 chunk, 
                 detalization);
             res.GameObject.isStatic = true;
@@ -214,19 +267,12 @@ namespace World.Render
         }
 
         /// <summary>
-        /// Listen player moved from chunk
-        /// </summary>
-        public void PlayerChunkCoordChanged(IntCoord prevChunkCoord, IntCoord newChunkCoord)
-        {
-        }
-
-        /// <summary>
         /// Create chunks for curRender frame
         /// </summary>
         public void Initialize()
         {
             renderedChunks = new Dictionary<Chunk, RenderedChunk>();
-            foreach(ChunkDetalization z in World.settings.detalization.GetDetalizations(World.CurChunkCoord))
+            foreach(ChunkDetalization z in World.settings.detalization.GetDetalizations(World.CurChunk.chunkCoord))
             {
                 Chunk chunk = World.Model.chunksNavigator.GetChunk(z.chunkCoord);
                 if (!renderedChunks.ContainsKey(chunk))
@@ -289,6 +335,26 @@ namespace World.Render
                 SetNeighbors(right, false);
                 SetNeighbors(down, false);
                 SetNeighbors(left, false);
+            }
+        }
+
+        /// <summary>
+        /// Update detalization of RenderedChunk.
+        /// If not exists, it will be created
+        /// </summary>
+        public void UpdateRenderedChunk(Chunk chunk, int newDetalization)
+        {
+            RenderedChunk t;
+            renderedChunks.TryGetValue(World.Model.chunksNavigator.GetChunk(chunk.chunkCoord), out t);
+            if (t != null)
+            {
+                // Update existing rendered chunk
+                IncreaseChunkDetalization(t, newDetalization);
+            }
+            else
+            {
+                // Create new rendered chunk
+                RenderNewChunk(chunk, newDetalization);
             }
         }
     }

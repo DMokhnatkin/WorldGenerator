@@ -7,6 +7,8 @@ using World.Generator.Algorithms;
 using World.Render;
 using World.DataStructures.ChunksGrid;
 using World.DataStructures;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace World.Instance
 {
@@ -48,6 +50,13 @@ namespace World.Instance
         /// </summary>
         public WorldInstanceSettings settings = new WorldInstanceSettings();
 
+        private Queue<IEnumerator> Coroutines = new Queue<IEnumerator>();
+
+        /// <summary>
+        /// Is some world update coroutine is working now?
+        /// </summary>
+        bool worldIsUpdating = false;
+
         /// <summary>
         /// Coordinate of current model point 
         /// </summary>
@@ -60,7 +69,7 @@ namespace World.Instance
             }
         }
 
-        public IntCoord CurChunkCoord { get; private set; }
+        public Chunk CurChunk { get; private set; }
 
         void Awake()
         {
@@ -75,26 +84,77 @@ namespace World.Instance
             // TODO: fix this
             if (settings.detalization.data.Length + 1 != Model.detalizationAccessor.detalizationLayersCount)
                 Debug.LogError("Detalization layers count are incorrect");
+            CurChunk = Model.chunksNavigator.GetChunk(new IntCoord(0, 0));
             WorldGenerator.Initialize();
             WorldRender.Initialize();
         }
 
+        /// <summary>
+        /// Update world
+        /// </summary>
+        private IEnumerator UpdateWorld(Chunk prevVal, Chunk curVal)
+        {
+            worldIsUpdating = true;
+            foreach (ChunkDetalization z in settings.detalization.GetChunksWithIncreasedDetalization(prevVal.chunkCoord, curVal.chunkCoord))
+            {
+                WorldGenerator.GenerateChunk(Model.chunksNavigator.GetChunk(z.chunkCoord), z.detalization);
+                WorldRender.UpdateRenderedChunk(Model.chunksNavigator.GetChunk(z.chunkCoord), z.detalization);
+                yield return null;
+            }
+            worldIsUpdating = false;
+        }
+
+        /// <summary>
+        /// If last coroutone was finished, start next in queue
+        /// </summary>
+        void UpdateCoroutines()
+        {
+            if (Coroutines.Count == 0)
+                return;
+            if (worldIsUpdating)
+                return;
+            else
+            {
+                StartCoroutine(Coroutines.Dequeue());
+            }
+        }
+
         void Update()
         {
+            UpdateCoroutines();
             IntCoord curCoord = Model.CoordTransformer.GlobalCoordToModel(new Vector2(player.transform.position.x, 
                 player.transform.position.z));
             if (!curCoord.Equals(LastCoord))
             {
                 LastCoord = curCoord;
-                if (curCoord.x > (CurChunkCoord.x + 1) * (settings.chunkSize - 1))
+
+                if (curCoord.y > CurChunk.TopBorder)
                 {
-                    CurChunkCoord = CurChunkCoord.Right;
-                    WorldRender.PlayerChunkCoordChanged(CurChunkCoord.Left, CurChunkCoord);
+                    // Player moved to top chunk
+                    Chunk top = Model.chunksNavigator.TopNeighbor(CurChunk);
+                    Coroutines.Enqueue(UpdateWorld(CurChunk, top));
+                    CurChunk = top;
                 }
-                if (curCoord.x < CurChunkCoord.x * (settings.chunkSize - 1))
+                if (curCoord.y < CurChunk.DownBorder)
                 {
-                    CurChunkCoord = CurChunkCoord.Left;
-                    WorldRender.PlayerChunkCoordChanged(CurChunkCoord.Right, CurChunkCoord);
+                    // Player moved to down chunk
+                    Chunk down = Model.chunksNavigator.DownNeighbor(CurChunk);
+                    Coroutines.Enqueue(UpdateWorld(CurChunk, down));
+                    CurChunk = down;
+                }
+                if (curCoord.x > CurChunk.RightBorder)
+                {
+                    // Player moved to right chunk
+                    Chunk right = Model.chunksNavigator.RightNeighbor(CurChunk);
+                    Coroutines.Enqueue(UpdateWorld(CurChunk, right));
+                    CurChunk = right;
+                }
+                if (curCoord.x < CurChunk.LeftBorder)
+                {
+                    // Player moved to left chunk
+                    Chunk left = Model.chunksNavigator.LeftNeighbor(CurChunk);
+                    Coroutines.Enqueue(UpdateWorld(CurChunk, left));
+                    CurChunk = left;
                 }
             }
         }
