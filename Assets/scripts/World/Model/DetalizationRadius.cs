@@ -24,32 +24,28 @@ namespace World.Model
     public class DetalizationRadius
     {
         /// <summary>
-        /// Element with i index - distance when start use i - 1 detalization.
+        /// Element with i index - distance when start use max - i detalization.
         /// I.e. if radius of current chunk is less then data[0], we will set it's detalization = maxDetalization
         /// If radius between data[0]..data[1] we will set its's detalization = maxDetalization - 1
+        /// If data[i] == -1, this detalization will be skipped
         /// </summary>
         public int[] data;
 
-        int BinarySearch(int l, int r, int val)
+        int FindDetalization(int distance)
         {
-            if (l + 1 == r)
+            for (int i = 0; i < data.Length; i++)
             {
-                if (data[l] >= val)
-                    return l;
-                else
-                    return r;
+                if (data[i] == -1)
+                    continue;
+                if (data[i] > distance)
+                    return i;
             }
-            int c = (l + r) / 2;
-            if (val >= data[c])
-                return BinarySearch(c, r, val);
-            if (val < data[c])
-                return BinarySearch(l, c, val);
-            return -1;
+            return data.Length;
         }
 
         public int GetDetalization(int distance)
         {
-            return data.Length - BinarySearch(0, data.Length, distance);
+            return data.Length - FindDetalization(distance);
         }
 
         /// <summary>

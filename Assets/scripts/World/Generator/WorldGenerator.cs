@@ -54,8 +54,12 @@ namespace World.Generator
             if (!worldInstance.Model.heighmap.Contains(baseCoord))
                 worldInstance.Model.heighmap.Initialize(baseCoord);
             Vector2 pos = worldInstance.Model.CoordTransformer.ModelCoordToGlobal(baseCoord);
+            /*
             worldInstance.Model.heighmap[baseCoord] = Mathf.PerlinNoise(seed1.x + 0.0001f * pos.x + eps, seed1.y + 0.0001f * pos.y + eps) *
                 Mathf.PerlinNoise(seed1.x + 0.001f * pos.x + eps, seed1.y + 0.001f * pos.y + eps) * 0.7f;
+    */        
+            worldInstance.Model.heighmap[baseCoord] = perlin2d_1.Noise(seed1.x + 0.0001f * pos.x + eps, seed1.y + 0.0001f * pos.y + eps) *
+                perlin2d_2.Noise(seed1.x + 0.001f * pos.x + eps, seed1.y + 0.001f * pos.y + eps) * 0.7f;
             //    Mathf.PerlinNoise(seed2.x + 0.008f * pos.x + eps, seed2.y + 0.008f * pos.y + eps) * 0.25f +
             //    Mathf.PerlinNoise(seed3.x + 0.01f * pos.x + eps, seed3.y + 0.01f * pos.y + eps) * 0.125f +
             //    Mathf.PerlinNoise(seed4.x + 0.02f * pos.x + eps, seed4.y + 0.02f * pos.y + eps) * 0.125f;

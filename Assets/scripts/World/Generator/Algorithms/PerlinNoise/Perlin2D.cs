@@ -76,7 +76,8 @@ namespace World.Generator.Algorithms.PerlinNoise
             float bx = Lerp(bx1, bx2, pointInQuadX);
             float tb = Lerp(tx, bx, pointInQuadY);
 
-            return tb;
+            // Make it > 0 and < 1
+            return (tb + 1) / 2.0f;
         }
 
         public float Noise(float fx, float fy, int octaves, float persistence = 0.5f)
