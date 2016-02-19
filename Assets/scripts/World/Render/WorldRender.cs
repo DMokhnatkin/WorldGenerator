@@ -31,6 +31,11 @@ namespace World.Render
 
         private Dictionary<Chunk, RenderedChunk> renderedChunks;
 
+        /// <summary>
+        /// GameObject which is parent for all chunk's GameObjects
+        /// </summary>
+        private GameObject parentObject;
+
         public const float CHUNKS_IMPOSITION = 0.1f;
 
         #region Rendered chunks
@@ -171,51 +176,22 @@ namespace World.Render
                 }
             data.SetHeightsDelayLOD(0, 0, heighmap);
 
-            // Terrain textures
-            data.splatPrototypes = new SplatPrototype[1] { new SplatPrototype() { texture = settings.baseTexture } };
-            float[,,] alphamap = new float[data.alphamapWidth, data.alphamapHeight, 1];
-            for (int x = 0; x < data.alphamapWidth; x++)
-                for (int y = 0; y < data.alphamapHeight; y++)
-                {
-                    alphamap[x, y, 0] = 1;
-                }
-            data.SetAlphamaps(0, 0, alphamap);
+            // Water
+            /*
+            GameObject water = new GameObject("test", typeof(MeshFilter), typeof(MeshRenderer));
+            var waterFilter = water.GetComponent<MeshFilter>(); 
+            waterFilter.mesh = new Mesh();
 
-            // Create TerrainRenderChunk and add it to renderedChunks
-            data.size = new Vector3(chunkSize, settings.worldHeight, chunkSize);
-            res = new TerrainRenderedChunk(Terrain.CreateTerrainGameObject(data), chunk, detalization);
-            Vector2 chunkPos = WorldModel.CoordTransformer.ModelCoordToGlobal(chunk.leftDown);
-            res.GameObject.transform.position = new Vector3(chunkPos.x - chunkSize / 2.0f, 0, chunkPos.y - chunkSize / 2.0f);
-            res.GameObject.name = "Chunk " + chunk.chunkCoord.ToString();
-            renderedChunks.Add(chunk, res);
-            res.TerrainComponent.ApplyDelayedHeightmapModification();
-            return;
-        }
-
-        /// <summary>
-        /// Render new chunk using mesh.
-        /// </summary>
-        private void RenderNewMeshChunk(Chunk chunk, int detalization)
-        {
-            MeshRenderedChunk res = new MeshRenderedChunk(
-                new GameObject("Chunk " + chunk.chunkCoord.ToString(), 
-                    typeof(MeshFilter), typeof(MeshRenderer)),
-                chunk, 
-                detalization);
-            res.GameObject.isStatic = true;
-
-            float chunkSize = WorldModel.CoordTransformer.ModelDistToGlobal(chunk.Size - 1);
-            res.MeshFilterComponent.mesh = new Mesh();
             int sizeInLayer = WorldModel.detalizationAccessor.GetSizeInLayer(chunk, detalization);
 
-            // Generate mesh
+            
             List<Vector3> vertices = new List<Vector3>();
             List<int> triangles = new List<int>();
             foreach (IntCoord baseCoord in World.Model.detalizationAccessor.GetBaseCoordsInLayer(chunk, detalization))
             {
-                float data = World.Model.detalizationAccessor.GetData<float>(baseCoord, World.Model.heighmap);
+                float height = World.Model.detalizationAccessor.GetData<float>(baseCoord, World.Model.heighmap) + World.Model.riverMap[baseCoord].waterLevel;
                 Vector2 pos = World.Model.CoordTransformer.ModelCoordToGlobal(baseCoord);
-                vertices.Add(new Vector3(pos.x - chunkSize / 2.0f, data * settings.worldHeight, pos.y - chunkSize / 2.0f));
+                vertices.Add(new Vector3(pos.x - chunkSize / 2.0f, height * World.settings.height, pos.y - chunkSize / 2.0f));
                 int v0 = vertices.Count - 1;
                 int v1 = vertices.Count - 2;
                 int v2 = vertices.Count - 1 - sizeInLayer;
@@ -233,12 +209,90 @@ namespace World.Render
             }
 
             // Apply generated mesh
+            waterFilter.mesh.vertices = vertices.ToArray();
+            waterFilter.mesh.triangles = triangles.ToArray();
+            waterFilter.mesh.Optimize();*/
+
+
+            // Terrain textures
+            data.alphamapResolution = data.heightmapResolution;
+            data.SetDetailResolution(data.heightmapResolution * 2, 8);
+            data.splatPrototypes = new SplatPrototype[2] { new SplatPrototype() { texture = settings.baseTexture, tileSize = settings.tileSize }, new SplatPrototype() { texture = settings.baseTexture1 } };
+            float[,,] alphamap = new float[data.alphamapWidth, data.alphamapHeight, data.splatPrototypes.Length];
+            for (int x = 0; x < data.alphamapWidth; x++)
+                for (int y = 0; y < data.alphamapHeight; y++)
+                {
+                    IntCoord cur = new IntCoord(x, y);
+                    alphamap[x, y, 0] = 1;
+                }
+            data.SetAlphamaps(0, 0, alphamap);
+
+            // Create TerrainRenderChunk and add it to renderedChunks
+            data.size = new Vector3(chunkSize, World.settings.height, chunkSize);
+            res = new TerrainRenderedChunk(Terrain.CreateTerrainGameObject(data), chunk, detalization);
+            Vector2 chunkPos = WorldModel.CoordTransformer.ModelCoordToGlobal(chunk.leftDown);
+            res.GameObject.transform.position = new Vector3(chunkPos.x - chunkSize / 2.0f, 0, chunkPos.y - chunkSize / 2.0f);
+            res.GameObject.name = "Chunk " + chunk.chunkCoord.ToString();
+            res.GameObject.transform.SetParent(parentObject.transform);
+            renderedChunks.Add(chunk, res);
+            res.TerrainComponent.ApplyDelayedHeightmapModification();
+            return;
+        }
+
+        /// <summary>
+        /// Render new chunk using mesh.
+        /// </summary>
+        private void RenderNewMeshChunk(Chunk chunk, int detalization)
+        {
+            MeshRenderedChunk res = new MeshRenderedChunk(
+                new GameObject("Chunk " + chunk.chunkCoord.ToString(), 
+                    typeof(MeshFilter), typeof(MeshRenderer)),
+                chunk, 
+                detalization);
+            res.GameObject.transform.SetParent(parentObject.transform);
+            res.GameObject.isStatic = true;
+
+            float chunkSize = WorldModel.CoordTransformer.ModelDistToGlobal(chunk.Size - 1);
+            res.MeshFilterComponent.mesh = new Mesh();
+            int sizeInLayer = WorldModel.detalizationAccessor.GetSizeInLayer(chunk, detalization);
+
+            // Generate mesh and uv map
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> triangles = new List<int>();
+            List<Vector2> uv = new List<Vector2>();
+            foreach (IntCoord baseCoord in World.Model.detalizationAccessor.GetBaseCoordsInLayer(chunk, detalization))
+            {
+                float data = World.Model.detalizationAccessor.GetData<float>(baseCoord, World.Model.heighmap);
+                Vector2 pos = World.Model.CoordTransformer.ModelCoordToGlobal(baseCoord);
+                vertices.Add(new Vector3(pos.x - chunkSize / 2.0f, data * World.settings.height, pos.y - chunkSize / 2.0f));
+                uv.Add(new Vector2((baseCoord.x - chunk.LeftBorder) / (float)chunk.Size, (baseCoord.y - chunk.LeftBorder) / (float)chunk.Size));
+                int v0 = vertices.Count - 1;
+                int v1 = vertices.Count - 2;
+                int v2 = vertices.Count - 1 - sizeInLayer;
+                int v3 = vertices.Count - 2 - sizeInLayer;
+                if (baseCoord.x != chunk.LeftBorder && baseCoord.y != chunk.DownBorder)
+                {
+                    triangles.Add(v1);
+                    triangles.Add(v0);
+                    triangles.Add(v3);
+
+                    triangles.Add(v0);
+                    triangles.Add(v2);
+                    triangles.Add(v3);
+                }
+            }
+
+            // Apply generated mesh
             res.MeshFilterComponent.mesh.vertices = vertices.ToArray();
             res.MeshFilterComponent.mesh.triangles = triangles.ToArray();
+            res.MeshFilterComponent.mesh.RecalculateNormals();
             res.MeshFilterComponent.mesh.Optimize();
 
             // Apply textures
+            res.MeshFilterComponent.mesh.uv = uv.ToArray();
             res.MeshRendererComponent.material.mainTexture = settings.baseTexture;
+            res.MeshRendererComponent.material.mainTextureScale = new Vector2(chunkSize / settings.tileSize.x , chunkSize / settings.tileSize.y);
+            res.MeshRendererComponent.material.SetFloat("_Glossiness", 0);
 
             renderedChunks.Add(chunk, res);
         }
@@ -271,6 +325,11 @@ namespace World.Render
         /// </summary>
         public void Initialize()
         {
+            if (parentObject == null)
+            {
+                parentObject = new GameObject("rendered");
+                parentObject.transform.SetParent(this.transform);
+            }
             renderedChunks = new Dictionary<Chunk, RenderedChunk>();
             foreach(ChunkDetalization z in World.settings.detalization.GetDetalizations(World.CurChunk.chunkCoord))
             {

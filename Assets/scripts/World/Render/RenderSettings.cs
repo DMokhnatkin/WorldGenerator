@@ -7,10 +7,9 @@ namespace World.Render
     [Serializable]
     public class RenderSettings
     {
-        /// <summary>
-        /// Size(in model coords of max detalization layer) of one chunk 
-        /// </summary>
-        public float worldHeight = 500f;
         public Texture2D baseTexture;
+        public Vector2 tileSize = new Vector2(15, 15);
+        public Texture2D baseTexture1;
+        public Texture2D baseTexture1_normal;
     }
 }

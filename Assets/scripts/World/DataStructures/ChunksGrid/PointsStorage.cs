@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace World.DataStructures.ChunksGrid
 {
     /// <typeparam name="T">Data which stores</typeparam>
-    public class PointsStorage<T>
+    public class PointsStorage<T> : IPointsStorage
     {
         /// <summary>
         /// Store values and it's coords
@@ -18,14 +18,15 @@ namespace World.DataStructures.ChunksGrid
         /// Initialize chunk
         /// Complexity = O(m * m), where m - size of chunk 
         /// </summary>
-        public void Initialize(Chunk chunk)
+        /// <param name="aroundChunk">Initialize some points around chunk. This parameter is radius</param>
+        public void Initialize(Chunk chunk, int aroundChunk = 0)
         {
-            for (int y = chunk.DownBorder; y <= chunk.TopBorder; y++)
-                for (int x = chunk.LeftBorder; x <= chunk.RightBorder; x++)
+            for (int y = chunk.DownBorder - aroundChunk; y <= chunk.TopBorder + aroundChunk; y++)
+                for (int x = chunk.LeftBorder - aroundChunk; x <= chunk.RightBorder + aroundChunk; x++)
                 {
                     IntCoord baseCoord = new IntCoord(x, y);
                     if (!data.ContainsKey(baseCoord))
-                        data.Add(baseCoord, default(T));
+                        data.Add(baseCoord, System.Activator.CreateInstance<T>());
                 }
         }
 
@@ -36,7 +37,7 @@ namespace World.DataStructures.ChunksGrid
         {
             if (Contains(baseCoord))
                 throw new ArgumentException("Point already is initialized");
-            data.Add(baseCoord, default(T));
+            data.Add(baseCoord, System.Activator.CreateInstance<T>());
         }
 
         /// <summary>
@@ -64,6 +65,12 @@ namespace World.DataStructures.ChunksGrid
                     throw new IndexOutOfRangeException();
                 data[baseCoord] = value;
             }
+        }
+
+        object IPointsStorage.this[IntCoord baseCoord]
+        {
+            get { return this[baseCoord]; }
+            set { this[baseCoord] = (T)value; }
         }
     }
 }

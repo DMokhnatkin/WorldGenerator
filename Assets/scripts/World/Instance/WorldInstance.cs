@@ -20,6 +20,11 @@ namespace World.Instance
     public class WorldInstance : MonoBehaviour
     {
         /// <summary>
+        /// Is world active now (is world generating and rendering now)
+        /// </summary>
+        public bool IsPlaying { get; private set; }
+
+        /// <summary>
         /// Last model coordinate, when world was updated.
         /// If current coord is not equals it we must update world
         /// </summary>
@@ -87,6 +92,7 @@ namespace World.Instance
             CurChunk = Model.chunksNavigator.GetChunk(new IntCoord(0, 0));
             WorldGenerator.Initialize();
             WorldRender.Initialize();
+            IsPlaying = true;
         }
 
         /// <summary>

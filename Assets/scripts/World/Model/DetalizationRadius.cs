@@ -58,7 +58,7 @@ namespace World.Model
         }
 
         /// <summary>
-        /// Get detalization for chunks around specifed cgunk
+        /// Get detalization for chunks around specifed chunk
         /// </summary>
         public IEnumerable<ChunkDetalization> GetDetalizations(IntCoord curChunkCoord)
         {

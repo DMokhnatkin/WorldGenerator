@@ -6,6 +6,9 @@ using World.Instance;
 using System.Collections.Generic;
 using World.DataStructures.ChunksGrid;
 using World.DataStructures;
+using World.Generator.Algorithms.Erosion;
+using World.Generator.Algorithms.WaterFlow;
+using World.Generator.Algorithms.River;
 
 namespace World.Generator
 {
@@ -15,14 +18,17 @@ namespace World.Generator
         const float BASE_HARSHNESS = 1f; // For better harshness representation
         public const float eps = 0.01f;
 
+        Perlin2D perlin2d_0;
         Perlin2D perlin2d_1;
         Perlin2D perlin2d_2;
         Perlin2D perlin2d_3;
+        Erosion erosion;
+        RiverMapBuilder riverBuilder;
 
-        Vector2 seed1;
-        Vector2 seed2;
-        Vector2 seed3;
-        Vector2 seed4;
+        public ErosionSettings erosionSettings = new ErosionSettings();
+        WaterFlowCalc waterFlow;
+        public WaterFlowSettings waterFlowSettings = new WaterFlowSettings();
+        public RiverSettings riverSettings = new RiverSettings();
 
         WorldInstance worldInstance;
 
@@ -35,13 +41,13 @@ namespace World.Generator
 
         void Awake()
         {
+            perlin2d_0 = new Perlin2D(new System.Random().Next());
             perlin2d_1 = new Perlin2D(new System.Random().Next());
             perlin2d_2 = new Perlin2D(new System.Random().Next());
             perlin2d_3 = new Perlin2D(new System.Random().Next());
-            seed1 = new Vector2(UnityEngine.Random.value * 1000, UnityEngine.Random.value * 1000);
-            seed2 = new Vector2(UnityEngine.Random.value * 1000, UnityEngine.Random.value * 1000);
-            seed3 = new Vector2(UnityEngine.Random.value * 1000, UnityEngine.Random.value * 1000);
-            seed4 = new Vector2(UnityEngine.Random.value * 1000, UnityEngine.Random.value * 1000);
+            erosion = new Erosion(erosionSettings);
+            waterFlow = new WaterFlowCalc(waterFlowSettings);
+            riverBuilder = new RiverMapBuilder(riverSettings);
             worldInstance = GetComponent<WorldInstance>();
         }
 
@@ -51,26 +57,38 @@ namespace World.Generator
         /// <param name="pt"></param>
         private void GeneratePoint(IntCoord baseCoord)
         {
+            Vector2 pos = worldInstance.Model.CoordTransformer.ModelCoordToGlobal(baseCoord);
+            // Mountain map
+            if (!worldInstance.Model.mountainMap.Contains(baseCoord))
+                worldInstance.Model.mountainMap.Initialize(baseCoord);
+            worldInstance.Model.mountainMap[baseCoord] = perlin2d_0.Noise(0.0001f * pos.x + eps, 0.0001f * pos.y + eps);
+            // Height map
             if (!worldInstance.Model.heighmap.Contains(baseCoord))
                 worldInstance.Model.heighmap.Initialize(baseCoord);
-            Vector2 pos = worldInstance.Model.CoordTransformer.ModelCoordToGlobal(baseCoord);
+            // 1
+            
+            worldInstance.Model.heighmap[baseCoord] =
+                worldInstance.Model.mountainMap[baseCoord] *
+                (perlin2d_2.Noise(0.001f * pos.x + eps, 0.001f * pos.y + eps) * 0.7f +
+                (perlin2d_3.Noise(0.003f * pos.x + eps, 0.003f * pos.y + eps) - 0.5f) * 0.3f);
+            // 2
             /*
-            worldInstance.Model.heighmap[baseCoord] = Mathf.PerlinNoise(seed1.x + 0.0001f * pos.x + eps, seed1.y + 0.0001f * pos.y + eps) *
-                Mathf.PerlinNoise(seed1.x + 0.001f * pos.x + eps, seed1.y + 0.001f * pos.y + eps) * 0.7f;
-    */        
-            worldInstance.Model.heighmap[baseCoord] = perlin2d_1.Noise(seed1.x + 0.0001f * pos.x + eps, seed1.y + 0.0001f * pos.y + eps) *
-                perlin2d_2.Noise(seed1.x + 0.001f * pos.x + eps, seed1.y + 0.001f * pos.y + eps) * 0.7f;
-            //    Mathf.PerlinNoise(seed2.x + 0.008f * pos.x + eps, seed2.y + 0.008f * pos.y + eps) * 0.25f +
-            //    Mathf.PerlinNoise(seed3.x + 0.01f * pos.x + eps, seed3.y + 0.01f * pos.y + eps) * 0.125f +
-            //    Mathf.PerlinNoise(seed4.x + 0.02f * pos.x + eps, seed4.y + 0.02f * pos.y + eps) * 0.125f;
-            //worldInstance.Model[coord].Data.Height = perlin2d.Noise(0.0001f * coord.x + eps, 0.0001f * coord.y + eps) * 0.8f +
-            //        perlin2d.Noise(0.0005f * coord.x + eps, 0.0005f * coord.y + eps, 10) * 0.2f;
+            worldInstance.Model.heighmap[baseCoord] = Mathf.Pow(
+                (perlin2d_2.Noise(0.0005f * pos.x + eps, 0.0005f * pos.y + eps) * 0.7f +
+                (perlin2d_3.Noise(0.0007f * pos.x + eps, 0.0007f * pos.y + eps) - 0.5f)* 0.3f), 1 -  worldInstance.Model.mountainMap[baseCoord]);*/
         }
 
         public void GenerateChunk(Chunk chunk, int detalization)
         {
-            foreach (IntCoord z in worldInstance.Model.detalizationAccessor.GetBaseCoordsInLayer(chunk, detalization))
+            foreach (IntCoord z in worldInstance.Model.detalizationAccessor.GetBaseCoordsInLayer(chunk, detalization, 1))
                 GeneratePoint(z);
+
+            if (detalization == 6)
+            {
+                riverBuilder.BuildRiverMap(chunk, worldInstance.Model.heighmap, worldInstance.Model.riverMap);
+                //waterFlow.CalcWaterFlow(chunk, worldInstance.Model.heighmap, worldInstance.Model.waterFlowMap, worldInstance.Model.CoordTransformer.ModelUnitWidth, 10);
+                //erosion.CalcChunkErosion(chunk, worldInstance.Model, 10);
+            }
         }
 
         /// <summary>

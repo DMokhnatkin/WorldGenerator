@@ -23,6 +23,12 @@ namespace World.DataStructures.ChunksGrid
         /// </summary>
         public readonly IntCoord leftDown;
 
+        public IntCoord LeftTop { get { return new IntCoord(LeftBorder,TopBorder); } }
+
+        public IntCoord RightTop { get { return new IntCoord(RightBorder, TopBorder); } }
+
+        public IntCoord RightDown { get { return new IntCoord(RightBorder, DownBorder); } }
+
         public int TopBorder { get { return leftDown.y + Size - 1; } }
 
         public int RightBorder { get { return leftDown.x + Size - 1; } }
