@@ -33,9 +33,22 @@ namespace World.DataStructures.ChunksGrid
         /// <summary>
         /// Get chunk by coord in it
         /// </summary>
-        public Chunk GetChunkByInnerCoord(IntCoord coord)
+        public IEnumerable<Chunk> GetChunksByInnerCoord(IntCoord coord)
         {
-            return new Chunk(this, coord, new IntCoord(coord.x / chunkSize, coord.y / chunkSize));
+            // We need to make correction for negative coordinates
+            yield return GetChunk(new IntCoord(coord.x / (chunkSize - 1) - (coord.x < 0 ? 1 : 0), coord.y / (chunkSize - 1) - (coord.y < 0 ? 1 : 0)));
+            if (coord.x % (chunkSize - 1) == 0)
+            {
+                yield return GetChunk(new IntCoord(coord.x / (chunkSize - 1) - 1 - (coord.x < 0 ? 1 : 0), coord.y / (chunkSize - 1) - (coord.y < 0 ? 1 : 0)));
+            }
+            if (coord.y % (chunkSize - 1) == 0)
+            {
+                yield return GetChunk(new IntCoord(coord.x / (chunkSize - 1) - (coord.x < 0 ? 1 : 0), coord.y / (chunkSize - 1) - 1 - (coord.y < 0 ? 1 : 0)));
+            }
+            if (coord.x % (chunkSize - 1) == 0 && coord.y % (chunkSize - 1) == 0)
+            {
+                yield return GetChunk(new IntCoord(coord.x / (chunkSize - 1) - 1 - (coord.x < 0 ? 1 : 0), coord.y / (chunkSize - 1) - 1 - (coord.y < 0 ? 1 : 0)));
+            }
         }
 
         /// <summary>
