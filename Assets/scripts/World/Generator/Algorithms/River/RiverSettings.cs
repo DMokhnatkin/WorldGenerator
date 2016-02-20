@@ -10,6 +10,11 @@ namespace World.Generator.Algorithms.River
     {
         public int maxSourcesPerChunk = 2;
 
-        public float maxSourceDeep = 0.2f;
+        public float sourceEnergy = 0.2f;
+
+        /// <summary>
+        /// How much percentages of chunk rivers should be
+        /// </summary>
+        public float riverChunkDensity = 0.1f;
     }
 }

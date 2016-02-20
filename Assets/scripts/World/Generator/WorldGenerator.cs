@@ -47,7 +47,7 @@ namespace World.Generator
             perlin2d_3 = new Perlin2D(new System.Random().Next());
             erosion = new Erosion(erosionSettings);
             waterFlow = new WaterFlowCalc(waterFlowSettings);
-            riverBuilder = new RiverMapBuilder(riverSettings);
+            riverBuilder = new RiverMapBuilder(riverSettings, this);
             worldInstance = GetComponent<WorldInstance>();
         }
 
@@ -55,7 +55,7 @@ namespace World.Generator
         /// Generate single point data
         /// </summary>
         /// <param name="pt"></param>
-        private void GeneratePoint(IntCoord baseCoord)
+        public void GeneratePoint(IntCoord baseCoord)
         {
             Vector2 pos = worldInstance.Model.CoordTransformer.ModelCoordToGlobal(baseCoord);
             // Mountain map
@@ -85,7 +85,7 @@ namespace World.Generator
 
             if (detalization == 6)
             {
-                riverBuilder.BuildRiverMap(chunk, worldInstance.Model.heighmap, worldInstance.Model.riverMap);
+                riverBuilder.BuildRiverMap(chunk, worldInstance.Model.heighmap, worldInstance.Model.riverMap, worldInstance.Model.riverDensity);
                 //waterFlow.CalcWaterFlow(chunk, worldInstance.Model.heighmap, worldInstance.Model.waterFlowMap, worldInstance.Model.CoordTransformer.ModelUnitWidth, 10);
                 //erosion.CalcChunkErosion(chunk, worldInstance.Model, 10);
             }

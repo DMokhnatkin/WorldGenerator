@@ -11,46 +11,58 @@ namespace World.Generator.Algorithms.River
     public class RiverMapBuilder
     {
         RiverSettings settings;
+        WorldGenerator generator;
 
-        public RiverMapBuilder(RiverSettings settings)
+        public RiverMapBuilder(RiverSettings settings, WorldGenerator generator)
         {
             this.settings = settings;
+            this.generator = generator;
         }
 
         Random rand = new Random();
-        const int randConst = 50;
-        const float eps = 0.0001f;
 
-        public void BuildRiverMap(Chunk chunk, PointsStorage<float> heighmap, PointsStorage<RiverData> riverMap)
+        /// <summary>
+        /// Build river source and recursively build river way
+        /// </summary>
+        private void BuildSource(IntCoord coord, PointsStorage<float> heighmap, PointsStorage<RiverData> riverMap, Dictionary<Chunk, int> riverDensity, ChunksNavigator navigator, float sourceEnergy)
         {
-            riverMap.Initialize(chunk, 1);
-
-            List<IntCoord> queue = new List<IntCoord>();
-            for (int y = chunk.DownBorder; y <= chunk.TopBorder; y++)
-                for (int x = chunk.LeftBorder; x <= chunk.RightBorder; x++)
-                {
-                    queue.Add(new IntCoord(x, y));
-                }
-            // Descending sort
-            queue.Sort((x, y) => { return heighmap[x] > heighmap[y] ? -1 : 1; });
-
-            for (int i = queue.Count - 1; i >= 0; i--)
+            if (riverMap.Contains(coord))
+                return; // We joined some river
+            riverMap.Initialize(coord);
+            riverMap[coord].energy = sourceEnergy;
+            // Increase density for chunk(s) which contain this point
+            foreach (Chunk chunk in navigator.GetChunksByInnerCoord(coord))
             {
-                if (Comparer.Compare(riverMap[queue[i]].waterLevel, 0, eps) != 0)
-                    continue;
-                if (rand.Next(i, queue.Count + randConst) == i)
-                    riverMap[queue[i]].waterLevel = (float)(settings.maxSourceDeep * rand.NextDouble());
+                if (!riverDensity.ContainsKey(chunk))
+                    riverDensity.Add(chunk, 1);
+                else
+                    riverDensity[chunk]++;
             }
+            // Find neighbor the water will flow to
+            IntCoord minHeightNeighbor = coord;
+            for (int x = coord.x - 1; x <= coord.x + 1; x++)
+                for (int y = coord.y - 1; y <= coord.y + 1; y++)
+                {
+                    IntCoord cur = new IntCoord(x, y);
+                    if (!heighmap.Contains(cur))
+                        generator.GeneratePoint(cur);
+                    if (heighmap[cur] < heighmap[minHeightNeighbor])
+                        minHeightNeighbor = cur;
+                }
+            if (minHeightNeighbor.Equals(coord))
+                return; // No way for river
+            // Make min height neighbor as new source
+            BuildSource(minHeightNeighbor, heighmap, riverMap, riverDensity, navigator, sourceEnergy + heighmap[coord] - heighmap[minHeightNeighbor]);
+        }
 
-            for (int i = 0; i < queue.Count; i++)
+        public void BuildRiverMap(Chunk chunk, PointsStorage<float> heighmap, PointsStorage<RiverData> riverMap, Dictionary<Chunk, int> riverDensity)
+        {
+            if (!riverDensity.ContainsKey(chunk))
+                riverDensity.Add(chunk, 0);
+            while (riverDensity[chunk] / (float)(chunk.Size * chunk.Size) < settings.riverChunkDensity)
             {
-                IntCoord cur = queue[i];
-
-                float maxWaterLevel =
-                    Math.Max(Math.Max(heighmap[cur.Top] + riverMap[cur.Top].waterLevel, heighmap[cur.Right] + riverMap[cur.Right].waterLevel), 
-                    Math.Max(heighmap[cur.Down] + riverMap[cur.Down].waterLevel, heighmap[cur.Left] + riverMap[cur.Left].waterLevel));
-                if (maxWaterLevel > heighmap[cur])
-                    riverMap[cur].waterLevel = maxWaterLevel - heighmap[cur];
+                IntCoord coord = new IntCoord(rand.Next(chunk.LeftBorder, chunk.RightBorder), rand.Next(chunk.DownBorder, chunk.TopBorder));
+                BuildSource(coord, heighmap, riverMap, riverDensity, chunk.chunksNavigator, settings.sourceEnergy);
             }
         }
     }

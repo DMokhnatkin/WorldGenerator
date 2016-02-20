@@ -7,6 +7,6 @@ namespace World.Generator.Algorithms.River
 {
     public class RiverData
     {
-        public float waterLevel = 0;
+        public float energy = 0.0f;
     }
 }

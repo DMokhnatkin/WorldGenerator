@@ -33,7 +33,9 @@ namespace World.MyDebug.Storage.HeighmapGrid
                                 pos1.y);
                     GUIStyle style = new GUIStyle();
                     style.fontSize = (int)(HandleUtility.GetHandleSize(pos) * fontSize);
-                    Handles.Label(pos, valueGetter.GetValue(new IntCoord(x, y)), style);
+                    var cont = valueGetter.GetValue(new IntCoord(x, y));
+                    if (cont != null)
+                        Handles.Label(pos, cont , style);
                     /*
                     if (x > curChunk.LeftBorder)
                     {

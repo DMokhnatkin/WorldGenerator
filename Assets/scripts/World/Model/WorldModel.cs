@@ -37,6 +37,8 @@ namespace World.Model
 
         public readonly PointsStorage<RiverData> riverMap;
 
+        public readonly Dictionary<Chunk, int> riverDensity = new Dictionary<Chunk, int>();
+
         /// <summary>
         /// To access to coords in chunks by detalization layers
         /// </summary>
