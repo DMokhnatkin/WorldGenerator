@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using World.Instance;
 using World.Model;
-using World.Common;
 using World.DataStructures;
 using World.DataStructures.ChunksGrid;
 using System.Collections;
 using World.Render.Texture;
 using World.Render.RenderedChunks;
 using World.Render.Height;
+using World.Render.Water;
 
 namespace World.Render
 {
@@ -41,13 +41,15 @@ namespace World.Render
 
         public const float CHUNKS_IMPOSITION = 0.1f;
 
+        #region Render parts
         HeightRender render;
+        TextureRender textureRender;
+        WaterRender waterRender;
 
         public HeightRenderSettings renderSettings = new HeightRenderSettings();
-
-        TextureRender textureRender;
-
         public TextureRenderSettings textureRenderSettings = new TextureRenderSettings();
+        public WaterRenderSettings waterRenderSettings = new WaterRenderSettings();
+        #endregion
 
         public WorldRender()
         {
@@ -109,14 +111,15 @@ namespace World.Render
             // Min terrain heighmap resolution = 33
             if (worldInstance.Model.detalizationAccessor.GetSizeInLayer(chunk, detalization) >= 33)
             {
-                TerrainRenderedChunk res = render.GenerateTerrainChunk(chunk, detalization, true);
+                TerrainRenderedChunk res = render.RenderTerrainChunk(chunk, detalization, true);
                 textureRender.ApplyTexture(res, worldInstance.Model);
+                waterRender.RenderWater(res);
                 renderedChunks.Add(chunk, res);
                 SetNeighbors(chunk, true);
             }
             if (worldInstance.Model.detalizationAccessor.GetSizeInLayer(chunk, detalization) < 33)
             {
-                MeshRenderedChunk res = render.GenerateMeshChunk(chunk, detalization);
+                MeshRenderedChunk res = render.RenderMeshChunk(chunk, detalization);
                 textureRender.ApplyTexture(res, worldInstance.Model);
                 renderedChunks.Add(chunk, res);
             }
@@ -132,7 +135,10 @@ namespace World.Render
                 if (worldInstance == null)
                     Debug.LogError("Set worldInstance for worldRender");
                 else
+                {
                     render = new HeightRender(renderSettings, worldInstance);
+                    waterRender = new WaterRender(waterRenderSettings, worldInstance);
+                }
             }
             if (parentObject == null)
             {

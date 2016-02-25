@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace World.Render.Height
+namespace World.Render.Water
 {
     [Serializable]
-    public class HeightRenderSettings
+    public class WaterRenderSettings
     {
+        public GameObject waterPrefab;
     }
 }
