@@ -35,9 +35,10 @@ namespace World.Model
         /// </summary>
         public readonly PointsStorage<WaterFlowData> waterFlowMap;
 
-        public readonly PointsStorage<RiverData> riverMap;
-
-        public readonly Dictionary<Chunk, int> riverDensity = new Dictionary<Chunk, int>();
+        /// <summary>
+        /// Map of rivers
+        /// </summary>
+        public RiverMap riverMap;
 
         /// <summary>
         /// To access to coords in chunks by detalization layers
@@ -56,7 +57,7 @@ namespace World.Model
             waterFlowMap = new PointsStorage<WaterFlowData>();
             erosionMap = new PointsStorage<ErosionData>();
             mountainMap = new PointsStorage<float>();
-            riverMap = new PointsStorage<RiverData>();
+            riverMap = new RiverMap();
             detalizationAccessor = new DetalizationAccessor(chunksNavigator);
             CoordTransformer = new CoordTransformer(this, modelUnitWidth);
         }

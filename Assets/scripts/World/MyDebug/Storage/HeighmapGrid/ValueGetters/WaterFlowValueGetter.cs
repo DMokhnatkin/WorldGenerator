@@ -15,11 +15,11 @@ namespace World.MyDebug.Storage.HeighmapGrid.ValueGetters
 
         public override GUIContent GetValue(IntCoord coord)
         {
-            //return new GUIContent();
-            if (worldInstance.Model.riverMap.Contains(coord))
+            return new GUIContent();
+            /*if (worldInstance.Model.riverMap.Contains(coord))
                 return new GUIContent(worldInstance.Model.riverMap[coord].energy.ToString().PadRight(5, '0').Substring(0, 5));
             else
-                return null;
+                return null;*/
         }
     }
 }

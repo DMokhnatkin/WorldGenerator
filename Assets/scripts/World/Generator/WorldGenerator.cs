@@ -85,7 +85,8 @@ namespace World.Generator
 
             if (detalization == 6)
             {
-                riverBuilder.BuildRiverMap(chunk, worldInstance.Model.heighmap, worldInstance.Model.riverMap, worldInstance.Model.riverDensity);
+                riverBuilder.BuildRiverMap(chunk, worldInstance.Model.heighmap, worldInstance.Model.riverMap);
+                riverBuilder.AffectChunk(chunk, worldInstance.Model.heighmap, worldInstance.Model.riverMap);
                 //waterFlow.CalcWaterFlow(chunk, worldInstance.Model.heighmap, worldInstance.Model.waterFlowMap, worldInstance.Model.CoordTransformer.ModelUnitWidth, 10);
                 //erosion.CalcChunkErosion(chunk, worldInstance.Model, 10);
             }

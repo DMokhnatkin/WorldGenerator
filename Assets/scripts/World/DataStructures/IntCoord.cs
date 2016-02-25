@@ -38,11 +38,27 @@ namespace World.DataStructures
         }
 
         /// <summary>
+        /// LeftTop neighbor
+        /// </summary>
+        public IntCoord LeftTop
+        {
+            get { return new IntCoord(x - 1, y + 1); }
+        }
+
+        /// <summary>
         /// Top neighbor
         /// </summary>
         public IntCoord Top
         {
             get { return new IntCoord(x, y + 1); }
+        }
+
+        /// <summary>
+        /// RightTop neighbor
+        /// </summary>
+        public IntCoord RightTop
+        {
+            get { return new IntCoord(x + 1, y + 1); }
         }
 
         /// <summary>
@@ -54,11 +70,27 @@ namespace World.DataStructures
         }
 
         /// <summary>
+        /// RightDown neighbor
+        /// </summary>
+        public IntCoord RightDown
+        {
+            get { return new IntCoord(x + 1, y - 1); }
+        }
+
+        /// <summary>
         /// Down neighbor
         /// </summary>
         public IntCoord Down
         {
             get { return new IntCoord(x, y - 1); }
+        }
+
+        /// <summary>
+        /// LeftDown neighbor
+        /// </summary>
+        public IntCoord LeftDown
+        {
+            get { return new IntCoord(x - 1, y - 1); }
         }
 
         /// <summary>

@@ -41,6 +41,31 @@ namespace World.DataStructures.ChunksGrid
         }
 
         /// <summary>
+        /// Initialize some points
+        /// </summary>
+        public void Initialize(params IntCoord[] baseCoords)
+        {
+            foreach (IntCoord z in baseCoords)
+                Initialize(z);
+        }
+
+        /// <summary>
+        /// Initialize points (if some error occured false will be returned)
+        /// </summary>
+        public bool TryInitialize(params IntCoord[] baseCoords)
+        {
+            bool res = true;
+            foreach (IntCoord z in baseCoords)
+            {
+                if (!Contains(z))
+                    Initialize(z);
+                else
+                    res = false;
+            }
+            return res;
+        }
+
+        /// <summary>
         /// Does grid contains point with specifed base coord
         /// </summary>
         public bool Contains(IntCoord baseCoord)
